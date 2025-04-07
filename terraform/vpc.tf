@@ -1,5 +1,5 @@
 resource "aws_vpc" "kubernetes-vpc" {
-  cidr_block = "10.0.0.0/20"
+  cidr_block         = "10.0.0.0/20"
   enable_dns_support = true
 
   tags = {
@@ -8,38 +8,38 @@ resource "aws_vpc" "kubernetes-vpc" {
 }
 
 resource "aws_eip" "nat-ip" {
-    domain = "vpc"
-    
-    tags = {
-        Name = "NAT-Gateway-EIP"
-    }
+  domain = "vpc"
 
-    depends_on = [ aws_internet_gateway.vpc-igw ]
+  tags = {
+    Name = "NAT-Gateway-EIP"
+  }
+
+  depends_on = [aws_internet_gateway.vpc-igw]
 }
 
 resource "aws_nat_gateway" "kubernetes-nat-gateway" {
-    allocation_id = aws_eip.nat-ip.id
-    subnet_id     = aws_subnet.public-a.id
+  allocation_id = aws_eip.nat-ip.id
+  subnet_id     = aws_subnet.public-a.id
 
-    tags = {
-        Name = "Kubernetes-NAT-Gateway"
-    }
+  tags = {
+    Name = "Kubernetes-NAT-Gateway"
+  }
 
-    depends_on = [ aws_internet_gateway.vpc-igw ]
+  depends_on = [aws_internet_gateway.vpc-igw]
 }
 
 resource "aws_internet_gateway" "vpc-igw" {
-    vpc_id = aws_vpc.kubernetes-vpc.id
-    
-    tags = {
-        Name = "Kubernetes-IGW"
-    }
+  vpc_id = aws_vpc.kubernetes-vpc.id
+
+  tags = {
+    Name = "Kubernetes-IGW"
+  }
 }
 
 resource "aws_subnet" "public-a" {
-  vpc_id     = aws_vpc.kubernetes-vpc.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = "eu-west-1a"
+  vpc_id                  = aws_vpc.kubernetes-vpc.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "eu-west-1a"
   map_public_ip_on_launch = true
 
   tags = {
@@ -49,8 +49,8 @@ resource "aws_subnet" "public-a" {
 
 // Control plane subnets
 resource "aws_subnet" "cp-a" {
-  vpc_id     = aws_vpc.kubernetes-vpc.id
-  cidr_block = "10.0.4.0/24"
+  vpc_id            = aws_vpc.kubernetes-vpc.id
+  cidr_block        = "10.0.4.0/24"
   availability_zone = "eu-west-1a"
 
   tags = {
@@ -59,8 +59,8 @@ resource "aws_subnet" "cp-a" {
 }
 
 resource "aws_subnet" "cp-b" {
-  vpc_id     = aws_vpc.kubernetes-vpc.id
-  cidr_block = "10.0.5.0/24"
+  vpc_id            = aws_vpc.kubernetes-vpc.id
+  cidr_block        = "10.0.5.0/24"
   availability_zone = "eu-west-1b"
 
   tags = {
@@ -69,8 +69,8 @@ resource "aws_subnet" "cp-b" {
 }
 
 resource "aws_subnet" "cp-c" {
-  vpc_id     = aws_vpc.kubernetes-vpc.id
-  cidr_block = "10.0.6.0/24"
+  vpc_id            = aws_vpc.kubernetes-vpc.id
+  cidr_block        = "10.0.6.0/24"
   availability_zone = "eu-west-1c"
 
   tags = {
@@ -80,8 +80,8 @@ resource "aws_subnet" "cp-c" {
 
 // Worker node subnets
 resource "aws_subnet" "wkn-a" {
-  vpc_id     = aws_vpc.kubernetes-vpc.id
-  cidr_block = "10.0.7.0/24"
+  vpc_id            = aws_vpc.kubernetes-vpc.id
+  cidr_block        = "10.0.7.0/24"
   availability_zone = "eu-west-1a"
 
   tags = {
@@ -90,8 +90,8 @@ resource "aws_subnet" "wkn-a" {
 }
 
 resource "aws_subnet" "wkn-b" {
-  vpc_id     = aws_vpc.kubernetes-vpc.id
-  cidr_block = "10.0.8.0/24"
+  vpc_id            = aws_vpc.kubernetes-vpc.id
+  cidr_block        = "10.0.8.0/24"
   availability_zone = "eu-west-1b"
 
   tags = {
@@ -100,8 +100,8 @@ resource "aws_subnet" "wkn-b" {
 }
 
 resource "aws_subnet" "wkn-c" {
-  vpc_id     = aws_vpc.kubernetes-vpc.id
-  cidr_block = "10.0.9.0/24"
+  vpc_id            = aws_vpc.kubernetes-vpc.id
+  cidr_block        = "10.0.9.0/24"
   availability_zone = "eu-west-1c"
 
   tags = {
@@ -111,8 +111,8 @@ resource "aws_subnet" "wkn-c" {
 
 // Worker node subnets
 resource "aws_subnet" "reserved-a" {
-  vpc_id     = aws_vpc.kubernetes-vpc.id
-  cidr_block = "10.0.10.0/24"
+  vpc_id            = aws_vpc.kubernetes-vpc.id
+  cidr_block        = "10.0.10.0/24"
   availability_zone = "eu-west-1a"
 
   tags = {
@@ -121,8 +121,8 @@ resource "aws_subnet" "reserved-a" {
 }
 
 resource "aws_subnet" "rds-b" {
-  vpc_id     = aws_vpc.kubernetes-vpc.id
-  cidr_block = "10.0.11.0/24"
+  vpc_id            = aws_vpc.kubernetes-vpc.id
+  cidr_block        = "10.0.11.0/24"
   availability_zone = "eu-west-1b"
 
   tags = {
@@ -131,8 +131,8 @@ resource "aws_subnet" "rds-b" {
 }
 
 resource "aws_subnet" "rds-c" {
-  vpc_id     = aws_vpc.kubernetes-vpc.id
-  cidr_block = "10.0.12.0/24"
+  vpc_id            = aws_vpc.kubernetes-vpc.id
+  cidr_block        = "10.0.12.0/24"
   availability_zone = "eu-west-1c"
 
   tags = {
@@ -141,29 +141,29 @@ resource "aws_subnet" "rds-c" {
 }
 
 resource "aws_route_table" "internet-routetable" {
-    vpc_id = aws_vpc.kubernetes-vpc.id
+  vpc_id = aws_vpc.kubernetes-vpc.id
 
-    route {
-        cidr_block = "0.0.0.0/0"
-        gateway_id = aws_internet_gateway.vpc-igw.id
-    }
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.vpc-igw.id
+  }
 
-    tags = {
-        Name = "Kubernetes-Internet-Route-Table"
-    }
+  tags = {
+    Name = "Kubernetes-Internet-Route-Table"
+  }
 }
 
 
 resource "aws_route_table_association" "public-subnet-association" {
-    subnet_id      = aws_subnet.public-a.id
-    route_table_id = aws_route_table.internet-routetable.id
+  subnet_id      = aws_subnet.public-a.id
+  route_table_id = aws_route_table.internet-routetable.id
 }
 
 resource "aws_route_table" "private-routetable" {
   vpc_id = aws_vpc.kubernetes-vpc.id
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.kubernetes-nat-gateway.id
   }
 
@@ -173,47 +173,47 @@ resource "aws_route_table" "private-routetable" {
 }
 
 resource "aws_route_table_association" "private-subnet-association-wkn-a" {
-    subnet_id      = aws_subnet.wkn-a.id
-    route_table_id = aws_route_table.private-routetable.id 
+  subnet_id      = aws_subnet.wkn-a.id
+  route_table_id = aws_route_table.private-routetable.id
 }
 
 resource "aws_route_table_association" "private-subnet-association-wkn-b" {
-    subnet_id      = aws_subnet.wkn-b.id
-    route_table_id = aws_route_table.private-routetable.id 
+  subnet_id      = aws_subnet.wkn-b.id
+  route_table_id = aws_route_table.private-routetable.id
 }
 
 resource "aws_route_table_association" "private-subnet-association-wkn-c" {
-    subnet_id      = aws_subnet.wkn-c.id
-    route_table_id = aws_route_table.private-routetable.id 
+  subnet_id      = aws_subnet.wkn-c.id
+  route_table_id = aws_route_table.private-routetable.id
 }
 
 resource "aws_route_table_association" "private-subnet-association-cp-a" {
-    subnet_id      = aws_subnet.cp-a.id
-    route_table_id = aws_route_table.private-routetable.id 
+  subnet_id      = aws_subnet.cp-a.id
+  route_table_id = aws_route_table.private-routetable.id
 }
 
 resource "aws_route_table_association" "private-subnet-association-cp-b" {
-    subnet_id      = aws_subnet.cp-b.id
-    route_table_id = aws_route_table.private-routetable.id 
+  subnet_id      = aws_subnet.cp-b.id
+  route_table_id = aws_route_table.private-routetable.id
 }
 
 
 resource "aws_route_table_association" "private-subnet-association-cp-c" {
-    subnet_id      = aws_subnet.cp-c.id
-    route_table_id = aws_route_table.private-routetable.id 
+  subnet_id      = aws_subnet.cp-c.id
+  route_table_id = aws_route_table.private-routetable.id
 }
 
 resource "aws_route_table_association" "private-subnet-association-reserved-a" {
-    subnet_id      = aws_subnet.reserved-a.id
-    route_table_id = aws_route_table.private-routetable.id 
+  subnet_id      = aws_subnet.reserved-a.id
+  route_table_id = aws_route_table.private-routetable.id
 }
 
 resource "aws_route_table_association" "private-subnet-association-rds-b" {
-    subnet_id      = aws_subnet.rds-b.id
-    route_table_id = aws_route_table.private-routetable.id 
+  subnet_id      = aws_subnet.rds-b.id
+  route_table_id = aws_route_table.private-routetable.id
 }
 
 resource "aws_route_table_association" "private-subnet-association-rds-c" {
-    subnet_id      = aws_subnet.rds-c.id
-    route_table_id = aws_route_table.private-routetable.id 
+  subnet_id      = aws_subnet.rds-c.id
+  route_table_id = aws_route_table.private-routetable.id
 }

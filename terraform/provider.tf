@@ -1,3 +1,3 @@
 provider "aws" { // Define the default AWS provider
-  region = "eu-west-1" 
+  region = "eu-west-1"
 }
