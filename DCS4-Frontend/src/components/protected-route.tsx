@@ -1,27 +1,23 @@
-import {Navigate, Outlet, useLocation} from "react-router-dom";
-import React, { useEffect, useState } from "react";
-import { useAuthStore } from "@/stores/AuthStore";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import React from "react";
 import { toast } from "sonner";
-import {Role} from "@/types/user.ts";
-import Spinner from "@/components/ui/spinner.tsx";
+import { Role } from "@/types/user.ts";
+import { useAuth } from "@/contexts/AuthContext";
 
 type ProtectedRouteProps = {
-    redirectPath?: string;
     children?: React.ReactNode;
     requiredRole?: Role;
 };
 
 const ProtectedRoute = ({
-    redirectPath = '/login',
     children,
     requiredRole,
 }: ProtectedRouteProps) => {
     const location = useLocation();
-    const { isAuthenticated, checkAuth, isLoading, hasRole } = useAuthStore();
-    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const { hasRole } = useAuth();
     
-    // Handle unauthorized parameter 
-    useEffect(() => {
+    // Handle unauthorized toast when redirected with unauthorized parameter
+    React.useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         if (searchParams.get('unauthorized') === 'true') {
             toast("Access Denied", {
@@ -29,42 +25,14 @@ const ProtectedRoute = ({
                 style: { backgroundColor: 'hsl(var(--destructive))' }
             });
             
+            // Remove the parameter from URL
             const newUrl = new URL(window.location.href);
             newUrl.searchParams.delete('unauthorized');
             window.history.replaceState({}, '', newUrl);
         }
     }, [location.search]);
-    
-    // Check authentication on navigation/route change
-    useEffect(() => {
-        let isMounted = true;
-        
-        const verifyAuth = async () => {
-            setIsCheckingAuth(true);
-            await checkAuth();
-            if (isMounted) {
-                setIsCheckingAuth(false);
-            }
-        };
-        
-        verifyAuth();
-        
-        return () => {
-            isMounted = false;
-        };
-    }, [checkAuth, location.pathname]);
 
-    // Show loading state while checking authentication
-    if (isLoading || isCheckingAuth) {
-        return <Spinner/>;
-    }
-
-    // Redirect to login if not authenticated
-    if (!isAuthenticated) {
-        return <Navigate to={redirectPath} state={{ from: location.pathname }} replace />;
-    }
-
-    // Role-based access control
+    // Only check role-based access control - authentication is handled by Layout
     if (requiredRole && !hasRole(requiredRole)) {
         return <Navigate to={`/?unauthorized=true`} replace />;
     }

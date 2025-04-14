@@ -12,9 +12,8 @@ import Login from "@/app/login.tsx";
 import {Toaster} from "sonner";
 import ProtectedRoute from "@/components/protected-route.tsx";
 import {Role} from "@/types/user.ts";
-import { useEffect } from "react";
-import { useAuthStore } from "@/stores/AuthStore";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 // Create a client for react-query
 const queryClient = new QueryClient({
@@ -27,55 +26,39 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-    const { checkAuth } = useAuthStore();
-    
-    useEffect(() => {
-        checkAuth();
-        
-        // Periodic authentication checks (every 15 minutes)
-        const intervalId = setInterval(() => {
-            checkAuth();
-        }, 15 * 60 * 1000);
-        
-        return () => clearInterval(intervalId);
-    }, [checkAuth]);
-    
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-                <Router>
-                    <Routes>
-                        <Route path="/login" element={<Login/>}/>
-                        <Route path="/register" element={<Register/>}/>
-                        <Route path="/"
-                               element={
-                                   <ProtectedRoute requiredRole={Role.USER}>
-                                       <Layout/>
-                                   </ProtectedRoute>
-                               }>
-                            <Route index element={<Dashboard/>}/>
-                            <Route path="predictions" element={<Predictions/>}/>
-                            <Route path="history" element={<History/>}/>
-                            <Route path="analytics" element={<Predictions/>}/>
-                            <Route path="admin/calculations" element={
-                                <ProtectedRoute requiredRole={Role.ANALYST}>
-                                    <AdminCalculations/>
-                                </ProtectedRoute>
-                            }/>
-                            <Route path="admin/users" element={
-                                <ProtectedRoute requiredRole={Role.ADMIN}>
-                                    <AdminUsers/>
-                                </ProtectedRoute>
-                            }/>
-                            <Route path="admin/settings" element={
-                                <ProtectedRoute requiredRole={Role.ADMIN}>
-                                    <AdminSettings/>
-                                </ProtectedRoute>
-                            }/>
-                        </Route>
-                    </Routes>
-                </Router>
-                <Toaster/>
+                <AuthProvider>
+                    <Router>
+                        <Routes>
+                            <Route path="/login" element={<Login/>}/>
+                            <Route path="/register" element={<Register/>}/>
+                            <Route path="/" element={<Layout/>}>
+                                <Route index element={<Dashboard/>}/>
+                                <Route path="predictions" element={<Predictions/>}/>
+                                <Route path="history" element={<History/>}/>
+                                <Route path="analytics" element={<Predictions/>}/>
+                                <Route path="admin/calculations" element={
+                                    <ProtectedRoute requiredRole={Role.ANALYST}>
+                                        <AdminCalculations/>
+                                    </ProtectedRoute>
+                                }/>
+                                <Route path="admin/users" element={
+                                    <ProtectedRoute requiredRole={Role.ADMIN}>
+                                        <AdminUsers/>
+                                    </ProtectedRoute>
+                                }/>
+                                <Route path="admin/settings" element={
+                                    <ProtectedRoute requiredRole={Role.ADMIN}>
+                                        <AdminSettings/>
+                                    </ProtectedRoute>
+                                }/>
+                            </Route>
+                        </Routes>
+                        <Toaster/>
+                    </Router>
+                </AuthProvider>
             </ThemeProvider>
         </QueryClientProvider>
     )
