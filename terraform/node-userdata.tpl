@@ -3,8 +3,8 @@
 # This script is used to install the AWS CLI on an EC2 instance and tag the instance with a name based on its availability zone and instance ID. Don't delete it :)
 # We can later on pull ansible playbooks from S3 and run them here to install the rest of the software we need.
 
-apt update
-apt install -y unzip
+apt update -y
+apt install -y unzip ansible
 
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
@@ -18,3 +18,15 @@ NODE_TYPE=$(aws ec2 describe-tags --filters "Name=resource-id,Values=$INSTANCE_I
 TAG_NAME="$NODE_TYPE-$AZ-${INSTANCE_ID: -8}"
 
 aws ec2 create-tags --resources $INSTANCE_ID --tags Key=Name,Value=$TAG_NAME --region $REGION
+
+if [ "$NODE_TYPE" == "control-plane" ]; then
+    echo "Master node detected, uploading ansible playbook to install master node software"
+    aws s3 cp s3://kubernetes-bucket-dc-group/ansible/k8s-master.yml /tmp/k8s-master.yml
+    ansible-playbook /tmp/k8s-master.yml -i localhost
+elif [ "$NODE_TYPE" == "worker-node" ]; then
+    echo "Worker node detected, uploading ansible playbook to install worker node software"
+    aws s3 cp s3://kubernetes-bucket-dc-group/ansible/k8s-worker.yml /tmp/k8s-worker.yml
+    ansible-playbook /tmp/k8s-worker.yml -i localhost
+else
+    echo "Unknown node type: $NODE_TYPE"
+fi

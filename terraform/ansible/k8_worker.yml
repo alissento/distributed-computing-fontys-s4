@@ -1,5 +1,5 @@
 - name: Kubernetes Cluster Setup - Worker Nodes
-  hosts: k8s_workers
+  hosts: localhost
   become: true
 
   vars:
