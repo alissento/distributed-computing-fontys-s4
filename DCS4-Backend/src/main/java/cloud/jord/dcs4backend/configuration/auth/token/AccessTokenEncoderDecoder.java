@@ -29,13 +29,13 @@ public class AccessTokenEncoderDecoder implements AccessTokenEncoderUseCase, Acc
     @Override
     public String encode(AccessTokenUseCase accessToken) {
         Map<String, Object> claimsMap = new HashMap<>();
-        if (accessToken.getUserId() != null) {
-            claimsMap.put("accountId", accessToken.getUserId());
-        }
+        claimsMap.put("email", accessToken.getEmail());
+        claimsMap.put("name", accessToken.getName());
+        claimsMap.put("role", accessToken.getRole());
 
         Instant now = Instant.now();
         return Jwts.builder()
-                .setSubject(accessToken.getSubject())
+                .setSubject(accessToken.getUserId().toString())
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plus(30, ChronoUnit.MINUTES)))
                 .addClaims(claimsMap)
@@ -50,9 +50,12 @@ public class AccessTokenEncoderDecoder implements AccessTokenEncoderUseCase, Acc
                     .parseClaimsJws(accessTokenEncoded);
             Claims claims = jwt.getBody();
 
-            Long userId = claims.get("userId", Long.class);
+            Long userId = Long.parseLong(claims.getSubject());
+            String email = claims.get("email", String.class);
+            String name = claims.get("name", String.class);
+            String role = claims.get("role", String.class);
 
-            return new AccessToken(claims.getSubject(), userId);
+            return new AccessToken(email, userId, name, role);
         } catch (JwtException e) {
             throw new InvalidAccessTokenException(e.getMessage());
         }

@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import {
     BarChart3,
     Calculator,
@@ -11,7 +11,6 @@ import {
     TrendingUp,
     Users,
 } from "lucide-react"
-
 import {
     Sidebar,
     SidebarContent,
@@ -25,7 +24,7 @@ import {
     SidebarMenuItem,
     SidebarRail,
 } from "./ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
+import { Avatar, AvatarFallback } from "./ui/avatar"
 import { Button } from "./ui/button"
 import {
     DropdownMenu,
@@ -35,13 +34,35 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
+import { useAuthStore } from "@/stores/AuthStore"
+import { toast } from "sonner"
 
 export function DashboardSidebar() {
     const location = useLocation()
+    const navigate = useNavigate()
+
+    const user = useAuthStore(state => state.user)
+    const logout = useAuthStore(state => state.logout)
+
+    const handleLogout = async () => {
+        try {
+            await logout()
+            toast("Logged out", {
+                description: "You have been logged out successfully"
+            })
+            navigate('/login')
+        } catch (error) {
+            console.error('Logout failed', error)
+        }
+    }
 
     const isActive = (path: string) => {
         return location.pathname === path
     }
+
+    const userInitials = user?.name 
+        ? user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+        : 'U'
 
     return (
         <Sidebar collapsible="icon">
@@ -130,21 +151,27 @@ export function DashboardSidebar() {
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="w-full justify-start px-2">
                                 <Avatar className="h-6 w-6 mr-2">
-                                    <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                                    <AvatarFallback>JD</AvatarFallback>
+                                    <AvatarFallback>{userInitials}</AvatarFallback>
                                 </Avatar>
-                                <span>John Doe</span>
+                                <span className="truncate">{user?.name || 'User'}</span>
                                 <ChevronDown className="ml-auto h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                            <DropdownMenuLabel>
+                                <div className="flex flex-col">
+                                    <span>{user?.name || 'User'}</span>
+                                    <span className="text-xs text-muted-foreground">{user?.email || ''}</span>
+                                </div>
+                            </DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                                <Settings className="mr-2 h-4 w-4" />
-                                <span>Settings</span>
+                            <DropdownMenuItem asChild>
+                                <Link to="/profile">
+                                    <Settings className="mr-2 h-4 w-4" />
+                                    <span>Settings</span>
+                                </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleLogout}>
                                 <LogOut className="mr-2 h-4 w-4" />
                                 <span>Log out</span>
                             </DropdownMenuItem>

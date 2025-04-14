@@ -5,19 +5,29 @@ const apiClient: AxiosInstance = axios.create({
     baseURL: env.API_URL,
     headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
     } as RawAxiosRequestHeaders,
+    withCredentials: true,
+    timeout: 30000,
 });
 
-// Add auth header
-apiClient.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token && config.headers) {
-            config.headers['Authorization'] = `Bearer ${token}`;
+// Global response interceptor to handle errors
+apiClient.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        if (error.response) {
+            console.error(
+                `API Error: ${error.response.status} ${error.response.statusText}`,
+                error.response.data
+            );
+        } else if (error.request) {
+            console.error('API Error: No response received', error.request);
+        } else {
+            console.error('API Request Error:', error.message);
         }
-        return config;
-    },
-    (error) => Promise.reject(error)
+        
+        return Promise.reject(error);
+    }
 );
 
 export default apiClient;

@@ -1,5 +1,6 @@
 package cloud.jord.dcs4backend.business;
 
+import cloud.jord.dcs4backend.domain.Role;
 import cloud.jord.dcs4backend.domain.User;
 import cloud.jord.dcs4backend.domain.exceptions.ResourceNotFoundException;
 import cloud.jord.dcs4backend.domain.request.UserCreateRequest;
@@ -18,8 +19,10 @@ public class UserService implements UserServiceUseCase {
             throw new IllegalArgumentException("Email already exists");
         }
 
+        Role role = request.getRole() != null ? request.getRole() : Role.USER;
+
         String hashedPassword = PasswordManager.hashPassword(request.getPassword());
-        User user = new User(request.getName(), request.getEmail(), hashedPassword, request.getRole());
+        User user = new User(request.getName(), request.getEmail(), hashedPassword, role);
         userRepository.save(user);
     }
 

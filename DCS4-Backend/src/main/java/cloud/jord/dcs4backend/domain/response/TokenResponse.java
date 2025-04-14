@@ -1,10 +1,13 @@
 package cloud.jord.dcs4backend.domain.response;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class TokenResponse {
-    private final String token;
+    private String token;
+    private UserInfoResponse user;
 }

@@ -6,21 +6,39 @@ import lombok.Getter;
 
 @EqualsAndHashCode
 public class AccessToken implements AccessTokenUseCase {
-    private final String subject;
     private final Long userId;
+    private final String email;
+    private final String name;
+    private final String role;
 
-    public AccessToken(String subject, Long userId) {
-        this.subject = subject;
-        this.userId = userId;
+    public AccessToken(String email, Long userId) {
+        this(email, userId, null, null);
     }
 
-    @Override
-    public String getSubject() {
-        return subject;
+    public AccessToken(String email, Long userId, String name, String role) {
+        this.email = email;
+        this.userId = userId;
+        this.name = name;
+        this.role = role;
     }
 
     @Override
     public Long getUserId() {
         return userId;
+    }
+
+    @Override
+    public String getEmail() {
+        return email;
+    }
+    
+    @Override
+    public String getName() {
+        return name;
+    }
+    
+    @Override
+    public String getRole() {
+        return role;
     }
 }

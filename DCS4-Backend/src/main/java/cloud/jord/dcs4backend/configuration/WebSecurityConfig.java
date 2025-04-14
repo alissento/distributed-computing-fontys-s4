@@ -71,17 +71,37 @@ public class WebSecurityConfig {
                 "http://localhost:9090",
                 "https://ors.jord.cloud"
         ));
+        
         // Specify allowed methods
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        
         // Specify allowed headers
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        // Expose headers to the client
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Authorization", 
+                "Content-Type", 
+                "Accept", 
+                "X-Requested-With",
+                "Cache-Control",
+                "Origin"
+        ));
+        
+        // Expose these headers to the client
+        configuration.setExposedHeaders(Arrays.asList(
+                "Authorization", 
+                "Content-Disposition",
+                "X-Requested-With"
+        ));
+        
         // Allow credentials (cookies, authorization headers)
         configuration.setAllowCredentials(true);
+        
+        // Max age for preflight requests (1 hour)
+        configuration.setMaxAge(3600L);
+        
         // Apply CORS configuration to all paths
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+        
         return source;
     }
 

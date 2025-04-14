@@ -8,6 +8,7 @@ import cloud.jord.dcs4backend.configuration.auth.token.exception.InvalidAccessTo
 import cloud.jord.dcs4backend.domain.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -30,6 +31,7 @@ import java.util.Set;
 public class AuthenticationRequestFilter extends OncePerRequestFilter {
 
     private static final String SPRING_SECURITY_ROLE_PREFIX = "ROLE_";
+    private static final String JWT_COOKIE_NAME = "jwt_token";
 
     private AccessTokenDecoderUseCase accessTokenDecoder;
     private UserServiceUseCase userService;
@@ -38,13 +40,19 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        final String requestTokenHeader = request.getHeader("Authorization");
-        if (requestTokenHeader == null || !requestTokenHeader.startsWith("Bearer ")) {
+        // Get token from cookie
+        String accessTokenString = extractTokenFromCookies(request);
+        
+        // Fallback to Authorization header if no cookie (for backward compatibility)
+        if (accessTokenString == null) {
+            accessTokenString = extractTokenFromHeader(request);
+        }
+        
+        // If no token found, continue filter chain
+        if (accessTokenString == null) {
             chain.doFilter(request, response);
             return;
         }
-
-        String accessTokenString = requestTokenHeader.substring(7);
 
         try {
             AccessTokenUseCase accessToken = accessTokenDecoder.decode(accessTokenString);
@@ -55,6 +63,32 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
             sendAuthenticationError(response);
         }
     }
+    
+    /**
+     * Extract JWT token from cookies
+     */
+    private String extractTokenFromCookies(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (JWT_COOKIE_NAME.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Extract JWT token from Authorization header
+     */
+    private String extractTokenFromHeader(HttpServletRequest request) {
+        final String requestTokenHeader = request.getHeader("Authorization");
+        if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
+            return requestTokenHeader.substring(7);
+        }
+        return null;
+    }
 
     private void sendAuthenticationError(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -63,14 +97,19 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
 
     private void setupSpringSecurityContext(AccessTokenUseCase accessToken) {
         // Fetch user roles and permissions from the database
-        User user = userService.getUser(accessToken.getSubject());
+        User user = userService.getUser(accessToken.getUserId());
 
         // Convert roles and permissions to SimpleGrantedAuthority objects
         Set<GrantedAuthority> authorities = new HashSet<>();
         authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + user.getRole().name()));
 
         // Create UserDetails with the authorities
-        UserDetails userDetails = new CustomUserDetails(accessToken.getUserId(), user.getName(), user.getEmail(), authorities);
+        UserDetails userDetails = new CustomUserDetails(
+            accessToken.getUserId(), 
+            accessToken.getName() != null ? accessToken.getName() : user.getName(),
+            accessToken.getEmail(),
+            authorities
+        );
 
         // Set up UsernamePasswordAuthenticationToken
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
@@ -80,6 +119,4 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
         // Set the SecurityContext with the authentication token
         SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
     }
-
-
 }
