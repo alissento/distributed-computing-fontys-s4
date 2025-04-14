@@ -1,0 +1,71 @@
+- name: Kubernetes Cluster Setup - Worker Nodes
+  hosts: k8s_workers
+  become: true
+
+  vars:
+    kube_version: "1.29.0"
+    s3_script_bucket: "s3://kubernetes-bucket-dc-group"
+    join_command_file: "/tmp/kubeadm_join.sh"
+    aws_region: "eu-west-1"
+
+  tasks:
+    - name: Install pre-requisites
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - software-properties-common
+        state: present
+        update_cache: yes
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Enable Docker
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Add Kubernetes APT key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add Kubernetes APT repository
+      apt_repository:
+        repo: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
+        state: present
+
+    - name: Install Kubernetes components
+      apt:
+        name:
+          - kubelet={{ kube_version }}-00
+          - kubeadm={{ kube_version }}-00
+          - kubectl={{ kube_version }}-00
+        state: present
+        update_cache: yes
+
+    - name: Disable swap
+      shell: |
+        swapoff -a
+        sed -i '/ swap / s/^/#/' /etc/fstab
+
+    - name: Download join command from S3
+      shell: |
+        aws s3 cp {{ s3_script_bucket }}/ansible/kubeadm_join.sh {{ join_command_file }}
+      environment:
+        AWS_DEFAULT_REGION: "{{ aws_region }}"
+
+    - name: Make join command executable
+      file:
+        path: "{{ join_command_file }}"
+        mode: '0755'
+        state: file
+
+    - name: Execute join command
+      shell: "{{ join_command_file }}"
