@@ -1,0 +1,163 @@
+---
+- name: Setup Kubernetes worker node Locally (Ubuntu 24.04)
+  hosts: localhost  # Target the local machine
+  connection: local # Use local connection, no SSH
+  become: true      # Use sudo for tasks requiring root
+  vars:
+    kube_version_apt: "1.31.7-1.1"
+    kube_version_kubeadm_repo: "v1.31.7"
+    kube_user: "ubuntu"
+    s3_bucket_name: "kubernetes-bucket-dc-group"
+    s3_join_command_folder: "ansible"
+    s3_join_command_filename: "join-command.sh"
+    local_join_command_path: "/tmp/join-command.sh"
+
+  tasks:
+
+    - name: Disable swap
+      command: swapoff -a
+      changed_when: false
+
+    - name: Remove swap from /etc/fstab
+      mount:
+        name: swap
+        fstype: swap
+        state: absent
+
+    - name: Load required kernel modules
+      community.general.modprobe:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - overlay
+        - br_netfilter
+
+    - name: Ensure kernel modules load at boot
+      copy:
+        dest: /etc/modules-load.d/k8s.conf
+        content: |
+          overlay
+          br_netfilter
+        mode: '0644'
+
+    - name: Set required sysctl params for Kubernetes
+      ansible.posix.sysctl:
+        name: "{{ item.key }}"
+        value: "{{ item.value }}"
+        sysctl_file: /etc/sysctl.d/k8s.conf
+        reload: yes
+      loop:
+        - { key: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+        - { key: 'net.ipv4.ip_forward', value: '1' }
+        - { key: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
+
+    - name: Install prerequisites for K8s apt repo and AWS CLI
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+        state: present
+        update_cache: yes
+
+    - name: Create directory for apt keyrings
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Kubernetes GPG key
+      ansible.builtin.get_url:
+        url: https://pkgs.k8s.io/core:/stable:/{{ kube_version_kubeadm_repo.split('.')[0] }}.{{ kube_version_kubeadm_repo.split('.')[1] }}/deb/Release.key
+        dest: /tmp/kubernetes-apt-keyring.asc
+        mode: '0644'
+
+    - name: Dearmor Kubernetes GPG key
+      ansible.builtin.command:
+        cmd: gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /tmp/kubernetes-apt-keyring.asc
+        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+    - name: Add Kubernetes APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kube_version_kubeadm_repo.split('.')[0] }}.{{ kube_version_kubeadm_repo.split('.')[1] }}/deb/ /"
+        filename: kubernetes
+        state: present
+        update_cache: yes
+
+    - name: Install containerd
+      apt:
+        name: containerd
+        state: present
+
+    - name: Create containerd config directory
+      file:
+        path: /etc/containerd
+        state: directory
+        mode: '0755'
+
+    - name: Generate default containerd config and enable SystemdCgroup
+      shell: |
+        containerd config default > /etc/containerd/config.toml
+        sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+      args:
+        creates: /etc/containerd/config.toml
+      notify: restart containerd
+
+    - name: Enable and start containerd
+      systemd:
+        name: containerd
+        state: started
+        enabled: yes
+
+    - name: Install Kubernetes worker components (kubelet, kubeadm)
+      apt:
+        name:
+          - kubelet={{ kube_version_apt }}
+          - kubeadm={{ kube_version_apt }}
+        state: present
+        update_cache: yes
+
+    - name: Hold Kubernetes packages from being automatically updated
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop:
+        - kubelet
+        - kubeadm
+
+    - name: Download join command from S3
+      ansible.builtin.command:
+        cmd: aws s3 cp s3://{{ s3_bucket_name }}/{{ s3_join_command_folder }}/{{ s3_join_command_filename }} {{ local_join_command_path }}
+      register: s3_download_status
+      become: false # Run as the normal user (ubuntu) to use Instance Profile credentials
+      changed_when: s3_download_status.rc == 0
+      failed_when: s3_download_status.rc != 0
+      args:
+        creates: "{{ local_join_command_path }}"
+
+    - name: Ensure join command script is executable
+      ansible.builtin.file:
+        path: "{{ local_join_command_path }}"
+        mode: '0700'
+      when: s3_download_status.changed
+
+    - name: Join the worker node to the Kubernetes cluster
+      ansible.builtin.command:
+        cmd: bash {{ local_join_command_path }}
+      register: kubeadm_join_status
+      args:
+        creates: /etc/kubernetes/kubelet.conf
+      changed_when: kubeadm_join_status.rc == 0 and "'This node has joined the cluster'" in kubeadm_join_status.stdout
+      failed_when: kubeadm_join_status.rc != 0 and 'already joined' not in kubeadm_join_status.stderr
+
+    - name: Clean up join command script
+      ansible.builtin.file:
+        path: "{{ local_join_command_path }}"
+        state: absent
+
+  handlers:
+    - name: restart containerd
+      systemd:
+        name: containerd
+        state: restarted
