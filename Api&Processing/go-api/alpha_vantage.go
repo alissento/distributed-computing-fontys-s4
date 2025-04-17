@@ -4,42 +4,49 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
-const alphaVantageAPIKey = "" // Secure the key here
-const alphaVantageBaseURL = "https://www.alphavantage.co/query"
+const alphaVantageAPIKey = "HKAJUSEOTSJ2ID11" // Secure the key here
+const alphaVantageBaseURL = "https://www.alphavantage.co/querystock?"
 
 // FetchStockData TIME_SERIES_DAILY API
-func FetchStockData(symbol string) (string, error) {
+func FetchStockData(symbol string) (map[string]interface{}, error) {
 	// (TODO check if this logic can be used for injection!) %s means it will replace it with the value that comes after it.
-	url := fmt.Sprintf("%s?function=TIME_SERIES_DAILY&symbol=%s&apikey=%s", alphaVantageBaseURL, symbol, alphaVantageAPIKey)
-
+	url := fmt.Sprintf("%ssymbol=%s&exchange=&outputsize=full&datatype=json&function=TIME_SERIES_DAILY&apikey=%s", alphaVantageBaseURL, symbol, alphaVantageAPIKey)
+	log.Println("Fetching data from URL:", url) // check hoe het hier aankomt! (ToDo)
 	// Send the request
 	resp, err := http.Get(url)
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch data from Alpha Vantage: %w", err)
+		return nil, fmt.Errorf("failed to fetch data from Alpha Vantage: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Read the response body
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body) // Verender naar log! (TODO)
 	if err != nil {
-		//Note %w is used to wrap the error with additional context
-		return "", fmt.Errorf("failed to response : %w", err)
+		//Note van Owen :D %w is used to wrap the error with additional context
+		return nil, fmt.Errorf("failed to response : %w", err)
 	}
 
 	// Check if the API returned an error
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Alpha Vantage API error: %s", string(body))
+		return nil, fmt.Errorf("Alpha Vantage API error: %s", string(body))
 	}
 
-	// Parsee JSON response
-	var data map[string]interface{} //map to hold the JSON data
+	log.Println("Response Body:", string(body)) // check hoe het hier aankomt! (ToDo)
+	// Check if the response contains (" Meta Data" )
+	if !json.Valid(body) {
+		return nil, fmt.Errorf("invalid JSON response: %s", string(body))
+	}
+
+	// Parsee json response
+	var data map[string]interface{} //map to hold the JsoN data
 	if err := json.Unmarshal(body, &data); err != nil {
-		return "", fmt.Errorf("failed to parse JSON: %w", err)
+		return nil, fmt.Errorf("failed to parse JSON: %w", err)
 	}
 
-	// Convert data to string or process as needed
-	return string(body), nil
+	log.Println("Data:", data) // check hoe het hier aankomt! (ToDo)
+	return (data), nil
 }
