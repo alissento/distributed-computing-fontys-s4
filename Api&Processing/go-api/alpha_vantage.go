@@ -8,10 +8,6 @@ import (
 	"net/http"
 )
 
-const alphaVantageAPIKey = "HKAJUSEOTSJ2ID11" // Secure the key here
-const alphaVantageBaseURL = "https://www.alphavantage.co/querystock?"
-
-// FetchStockData TIME_SERIES_DAILY API
 func FetchStockData(symbol string) (map[string]interface{}, error) {
 	// (TODO check if this logic can be used for injection!) %s means it will replace it with the value that comes after it.
 	url := fmt.Sprintf("%ssymbol=%s&exchange=&outputsize=full&datatype=json&function=TIME_SERIES_DAILY&apikey=%s", alphaVantageBaseURL, symbol, alphaVantageAPIKey)
@@ -36,7 +32,6 @@ func FetchStockData(symbol string) (map[string]interface{}, error) {
 	}
 
 	log.Println("Response Body:", string(body)) // check hoe het hier aankomt! (ToDo)
-	// Check if the response contains (" Meta Data" )
 	if !json.Valid(body) {
 		return nil, fmt.Errorf("invalid JSON response: %s", string(body))
 	}

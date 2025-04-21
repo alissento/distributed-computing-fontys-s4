@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  go-process:
+    build:
+      context: ./go-process
+      dockerfile: Dockerfile.dev
+    env_file:
+      - .env.dev
+    volumes:
+      - ./go-process:/app:z
+    depends_on:
+      - localstack
+
+  go-api:
+    build:
+      context: ./go-api
+      dockerfile: Dockerfile.dev
+    env_file:
+      - .env.dev
+    volumes:
+      - ./go-api:/app:z
+    depends_on:
+      - localstack
+
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+    environment:
+      - SERVICES=s3,sqs
+      - DEFAULT_REGION=eu-west-1
+      - DEBUG=1
+    volumes:
+      - ./go-process/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
