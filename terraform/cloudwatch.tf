@@ -1,6 +1,3 @@
-provider "aws" {
-  region = "eu-west-1"
-}
 
 resource "aws_cloudwatch_log_group" "ec2_log_group" {
   name              = "/aws/ec2/instances"

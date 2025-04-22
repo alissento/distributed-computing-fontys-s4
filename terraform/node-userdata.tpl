@@ -4,7 +4,7 @@
 # We can later on pull ansible playbooks from S3 and run them here to install the rest of the software we need.
 
 apt update -y
-apt install -y unzip ansible
+apt install -y unzip ansible htop 
 
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
