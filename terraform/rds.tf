@@ -7,7 +7,7 @@ resource "aws_db_instance" "main_rds_instance" {
   identifier         = "main-rds-instance"
   instance_class     = "db.t3.medium"
   engine             = "postgres"
-  username           = "admin"
+  username           = "db_admin"
   password           = "password"
   db_subnet_group_name = aws_db_subnet_group.my_db_subnet_group.name
   availability_zone = "eu-west-1b"
