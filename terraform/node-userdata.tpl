@@ -3,7 +3,7 @@
 # This script is used to install the AWS CLI on an EC2 instance and tag the instance with a name based on its availability zone and instance ID. Don't delete it :)
 # We can later on pull ansible playbooks from S3 and run them here to install the rest of the software we need.
 
-apt update -y
+apt update
 apt install -y unzip ansible htop 
 
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
