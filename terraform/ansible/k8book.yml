@@ -1,5 +1,6 @@
 - name: Setup Kubernetes master node (Ubuntu 24.04)
-  hosts: master
+  hosts: localhost  # Target the local machine
+  connection: local # Use local connection, no SSH
   become: true
   vars:
     kube_version_apt: "1.31.7-1.1" # Use this for apt installs

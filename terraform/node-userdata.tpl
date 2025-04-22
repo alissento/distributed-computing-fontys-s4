@@ -21,12 +21,12 @@ aws ec2 create-tags --resources $INSTANCE_ID --tags Key=Name,Value=$TAG_NAME --r
 
 if [ "$NODE_TYPE" == "control-plane" ]; then
     echo "Master node detected, uploading ansible playbook to install master node software"
-    aws s3 cp s3://kubernetes-bucket-dc-group/ansible/k8s-master.yml /tmp/k8s-master.yml
-    ansible-playbook /tmp/k8s-master.yml -i localhost
+    aws s3 cp s3://kubernetes-bucket-dc-group/ansible/k8_master.yml /tmp/k8s_master.yml
+    ansible-playbook /tmp/k8s_master.yml -i localhost
 elif [ "$NODE_TYPE" == "worker-node" ]; then
     echo "Worker node detected, uploading ansible playbook to install worker node software"
-    aws s3 cp s3://kubernetes-bucket-dc-group/ansible/k8s-worker.yml /tmp/k8s-worker.yml
-    ansible-playbook /tmp/k8s-worker.yml -i localhost
+    aws s3 cp s3://kubernetes-bucket-dc-group/ansible/k8_worker.yml /tmp/k8s_worker.yml
+    ansible-playbook /tmp/k8s_worker.yml -i localhost
 else
     echo "Unknown node type: $NODE_TYPE"
 fi

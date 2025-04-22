@@ -106,7 +106,7 @@ resource "aws_autoscaling_group" "worker-node-asg" {
     propagate_at_launch = true
   }
 
-  depends_on = [ aws_instance.control-plane, aws_s3_object.ansible_worker_node_script ]
+  depends_on = [ aws_instance.control-plane, aws_s3_object.ansible_worker_node_script, aws_nat_gateway.kubernetes-nat-gateway ]
 }
 
 resource "aws_instance" "control-plane" {
@@ -123,5 +123,5 @@ resource "aws_instance" "control-plane" {
     NodeType = "control-plane"
   }
 
-  depends_on = [ aws_s3_object.ansible_master_node_script ]
+  depends_on = [ aws_s3_object.ansible_master_node_script, aws_nat_gateway.kubernetes-nat-gateway ]
 }
