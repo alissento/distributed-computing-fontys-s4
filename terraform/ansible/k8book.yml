@@ -6,7 +6,11 @@
     kube_version_apt: "1.31.7-1.1" # Use this for apt installs
     kube_version_kubeadm: "v1.31.7" # Use this for kubeadm init
     kube_user: "ubuntu" # Define the non-root user
-
+    s3_bucket_name: "kubernetes-bucket-dc-group" # S3 bucket name
+    s3_join_command_folder: "ansible" # Folder in S3 bucket for join command
+    s3_join_command_filename: "join-command.sh" # Filename for join command in S3
+    local_join_command_path: "/tmp/join-command.sh" # Local path for join command
+    
   tasks:
 
     - name: Disable swap
@@ -186,6 +190,14 @@
         owner: "{{ kube_user }}"
         group: "{{ kube_user }}"
         mode: '0700'
+
+    - name: Upload join command to S3
+      ansible.builtin.command:
+        cmd: aws s3 cp /home/{{ kube_user }}/join-command.sh s3://{{ s3_bucket_name }}/{{ s3_join_command_folder }}/{{ s3_join_command_filename }}
+      register: upload_status
+      become: false
+      changed_when: upload_status.rc == 0
+      failed_when: upload_status.rc != 0
 
   handlers:
     - name: restart containerd
