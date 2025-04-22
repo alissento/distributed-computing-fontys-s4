@@ -10,3 +10,4 @@ RUN go mod download
 COPY . .
 
 CMD ["go", "run", "."]
+# delete the compiler (TODO)

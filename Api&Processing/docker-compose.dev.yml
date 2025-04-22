@@ -11,6 +11,8 @@ services:
       - ./go-process:/app:z
     depends_on:
       - localstack
+    networks:
+      - app-network
 
   go-api:
     build:
@@ -22,6 +24,8 @@ services:
       - ./go-api:/app:z
     depends_on:
       - localstack
+    networks:
+      - app-network
 
   localstack:
     image: localstack/localstack:latest
@@ -34,3 +38,10 @@ services:
       - DEBUG=1
     volumes:
       - ./go-process/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+    #Naam container (TODO)

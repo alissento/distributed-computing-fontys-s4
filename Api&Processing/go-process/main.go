@@ -17,17 +17,17 @@ import (
 )
 
 var (
-	region              = os.Getenv("AWS_REGION")
-	endpoint            = os.Getenv("S3_ENDPOINT") // optional, for local dev
-	accessKey           = os.Getenv("AWS_ACCESS_KEY_ID")
-	secretKey           = os.Getenv("AWS_SECRET_ACCESS_KEY")
-	queueURL            = os.Getenv("QUEUE_URL")
-	stockBucket         = os.Getenv("BUCKET_NAME")
-	predictionBucket    = os.Getenv("PREDICTION_BUCKET")
-	alphaVantageAPIKey  = os.Getenv("ALPHAVANTAGE_KEY")
-	awsname             = os.Getenv("AWS_NAME")
-	awspassword         = os.Getenv("AWS_PASSWORD")
-	StockDataBucketName = os.Getenv("STOCK_DATA_BUCKET")
+	region              string
+	endpoint            string
+	accessKey           string
+	secretKey           string
+	queueURL            string
+	stockBucket         string
+	predictionBucket    string
+	alphaVantageAPIKey  string
+	awsname             string
+	awspassword         string
+	StockDataBucketName string
 	s3Client            *s3.Client
 	sqsClient           *sqs.Client
 )
@@ -61,6 +61,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading env file %s: %v", envFile, err)
 	}
+
+	region = os.Getenv("AWS_REGION")
+	endpoint = os.Getenv("S3_ENDPOINT") // optional, for local dev
+	accessKey = os.Getenv("AWS_ACCESS_KEY_ID")
+	secretKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
+	queueURL = os.Getenv("QUEUE_URL")
+	stockBucket = os.Getenv("BUCKET_NAME")
+	predictionBucket = os.Getenv("PREDICTION_BUCKET")
+	alphaVantageAPIKey = os.Getenv("ALPHAVANTAGE_KEY")
+	awsname = os.Getenv("AWS_NAME")
+	awspassword = os.Getenv("AWS_PASSWORD")
+	StockDataBucketName = os.Getenv("STOCK_DATA_BUCKET")
 
 	// Load the AWS SDK configuration with correct LocalStack endpoint for both SQS and S3
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
