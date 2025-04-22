@@ -10,7 +10,6 @@ resource "aws_db_instance" "main_rds_instance" {
   username           = "db_admin"
   password           = "password"
   db_subnet_group_name = aws_db_subnet_group.my_db_subnet_group.name
-  availability_zone = "eu-west-1b"
   multi_az           = true
   publicly_accessible = false
   allocated_storage  = 20
