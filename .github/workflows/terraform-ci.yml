@@ -1,0 +1,44 @@
+name: Terraform CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: '1.0.0'
+
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./terraform
+
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: ./terraform
+
+    - name: Terraform Plan
+      run: terraform plan
+      working-directory: ./terraform
+      if: github.event_name == 'pull_request'
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+      working-directory: ./terraform
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
