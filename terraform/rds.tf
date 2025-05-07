@@ -13,4 +13,5 @@ resource "aws_db_instance" "main_rds_instance" {
   multi_az           = true
   publicly_accessible = false
   allocated_storage  = 20
+  skip_final_snapshot = true 
 }
