@@ -16,9 +16,11 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: '14'
+    - name: Change to the correct directory
+      run: cd DCS4-Backend
     - name: Install dependencies
       run: npm install
+      working-directory: ./DCS4-Backend
     - name: Run tests
       run: npm test
-    - name: Build
-      run: npm run build
+      working-directory: ./DCS4-Backend
