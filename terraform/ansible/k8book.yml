@@ -1,3 +1,4 @@
+---
 - name: Setup Kubernetes master node (Ubuntu 24.04)
   hosts: localhost  # Target the local machine
   connection: local # Use local connection, no SSH

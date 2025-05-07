@@ -3,6 +3,8 @@
 # This script is used to install the AWS CLI on an EC2 instance and tag the instance with a name based on its availability zone and instance ID. Don't delete it :)
 # We can later on pull ansible playbooks from S3 and run them here to install the rest of the software we need.
 
+# Use this script only when the playbooks are ready to be run (change the name of the file to the node-userdata.tpl)
+
 echo "Running userdata script"
 echo "Installing AWS CLI, Ansible, unzip, htp and other dependencies necessary for later Kubernetes installation"
 
@@ -30,13 +32,12 @@ MAX_RETRIES=30
 RETRY_COUNT=0
 
 if [ "$NODE_TYPE" == "control-plane" ]; then
-    echo "Master node detected, downloading shell script to install master node software"
-    aws s3 cp s3://kubernetes-bucket-dc-group/ansible/masternode.sh /tmp/masternode.sh
-    chmod +x /tmp/masternode.sh
-    /tmp/masternode.sh
+    echo "Master node detected, downloading ansible playbook to install master node software"
+    aws s3 cp s3://kubernetes-bucket-dc-group/ansible/masternode-playbook.yml /tmp/masternode-playbook.yml
+    ansible-playbook /tmp/masternode-playbook.yml -i localhost
     echo "Master node setup completed"
 elif [ "$NODE_TYPE" == "worker-node" ]; then
-    echo "Worker node detected, downloading shell script to install worker node software"
+    echo "Worker node detected, downloading ansible playbook to install worker node software"
 
     until aws s3 cp s3://kubernetes-bucket-dc-group/ansible/join-command.sh /tmp/join-command.sh; do
         RETRY_COUNT=$((RETRY_COUNT + 1))
@@ -48,8 +49,8 @@ elif [ "$NODE_TYPE" == "worker-node" ]; then
             sleep 30
     done
 
-    aws s3 cp s3://kubernetes-bucket-dc-group/ansible/workernode.sh /tmp/workernode.sh
-    chmod +x /tmp/workernode.sh
+    aws s3 cp s3://kubernetes-bucket-dc-group/ansible/workernode-playbook.yml /tmp/workernode-playbook.yml
+    ansible-playbook /tmp/workernode-playbook.yml -i localhost
     echo "Worker node setup completed"
 else
     echo "Unknown node type: $NODE_TYPE"
