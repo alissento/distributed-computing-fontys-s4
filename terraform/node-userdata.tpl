@@ -50,6 +50,7 @@ elif [ "$NODE_TYPE" == "worker-node" ]; then
 
     aws s3 cp s3://kubernetes-bucket-dc-group/ansible/workernode.sh /tmp/workernode.sh
     chmod +x /tmp/workernode.sh
+    /tmp/workernode.sh
     echo "Worker node setup completed"
 else
     echo "Unknown node type: $NODE_TYPE"
