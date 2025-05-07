@@ -67,6 +67,9 @@ EOF
 # Copy the join command script to S3 bucket
 aws s3 cp "/tmp/join-command.sh" "s3://kubernetes-bucket-dc-group/ansible/join-command.sh"
 
+# Set up kubectl for the root user
+export KUBECONFIG=/etc/kubernetes/admin.conf
+
 # Install Calico CNI plugin
 kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.0/manifests/calico.yaml
 
