@@ -12,7 +12,7 @@ on:
  
 env:
 
-  AWS_REGION: "eu-west-1" # Replace with your AWS region (e.g., eu-west-1)
+  AWS_REGION: "eu-west-1"
 
   ECR_REPOSITORY: "dc-container-repo" 
   
