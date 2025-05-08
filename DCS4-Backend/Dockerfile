@@ -6,6 +6,8 @@ WORKDIR /opt/app
 # Copy Gradle wrapper and project files into the container
 COPY . /opt/app
 
+RUN chmod +x /opt/app/gradlew
+
 # Run Gradle to build the project
 RUN ./gradlew assemble
 
