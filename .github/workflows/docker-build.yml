@@ -32,4 +32,4 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
     - name: Output image name
-      run: echo "Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      run: echo "Image pushed:$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
