@@ -1,35 +1,80 @@
-name: Build and Push Docker image to ECR
-
+name: Docker Build and Push to ECR
+ 
 on:
+
   push:
-    branches:
-      - main
 
+    branches: [ "main" ] # Or your main development branch
+
+  pull_request:
+
+    branches: [ "main" ]
+ 
+env:
+
+  AWS_REGION: "eu-west-1" # Replace with your AWS region (e.g., eu-west-1)
+
+  ECR_REPOSITORY: "dc-container-repo" 
+  
+  BACKEND_IMAGE_TAG: "backend-latest" # You can customize the tag
+
+  FRONTEND_IMAGE_TAG: "frontend-latest" # You can customize the tag
+ 
+permissions:
+
+  id-token: write
+
+  contents: read
+ 
 jobs:
+
   build-and-push:
+
+    name: Build and Push Docker Images
+
     runs-on: ubuntu-latest
-
+ 
     steps:
-    - uses: actions/checkout@v2
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-west-1  # Ensure this matches the region of your ECR
+      - name: Checkout code
 
-    - name: Login to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v1
+        uses: actions/checkout@v4
+ 
+      - name: Configure AWS credentials
 
-    - name: Build, tag, and push image to Amazon ECR
-      env:
-        ECR_REGISTRY: 657026912035.dkr.ecr.eu-west-1.amazonaws.com
-        ECR_REPOSITORY: dc-container-repo
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        uses: aws-actions/configure-aws-credentials@v4
 
-    - name: Output image name
-      run: echo "Image pushed:$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+        with:
+
+          role-to-assume: arn:aws:iam::657026912035:role/ECR-role
+
+          aws-region: ${{ env.AWS_REGION }}
+ 
+      # Build and push backend image
+
+      - name: Build and push Backend Docker image
+
+        working-directory: ./DCS4-Backend
+
+        run: |
+
+          docker build -t ${{ env.ECR_REPOSITORY }}:${{ env.BACKEND_IMAGE_TAG }} .
+
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.BACKEND_IMAGE_TAG }}
+ 
+      # Build and push frontend image
+
+      - name: Build and push Frontend Docker image
+
+        working-directory: ./DCS4-Frontend
+
+        run: |
+
+          docker build -t ${{ env.ECR_REPOSITORY }}:${{ env.FRONTEND_IMAGE_TAG }} .
+
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.FRONTEND_IMAGE_TAG }}
+ 
