@@ -1,79 +1,58 @@
 name: Docker Build and Push to ECR
- 
+
 on:
-
   push:
-
     branches: [ "main" ] 
-
   pull_request:
-
     branches: [ "main" ]
  
 env:
-
   AWS_REGION: "eu-west-1"
-
   ECR_REPOSITORY: "dc-container-repo" 
-  
   BACKEND_IMAGE_TAG: "backend-latest" 
-  FRONTEND_IMAGE_TAG: "frontend-latest" # You can customize the 
+  FRONTEND_IMAGE_TAG: "frontend-latest"
  
 permissions:
-
   id-token: write
-
   contents: read
  
 jobs:
-
   build-and-push:
-
     name: Build and Push Docker Images
-
     runs-on: ubuntu-latest
  
     steps:
-
       - name: Checkout code
-
         uses: actions/checkout@v4
  
       - name: Configure AWS credentials
-
         uses: aws-actions/configure-aws-credentials@v4
-
         with:
-
           role-to-assume: arn:aws:iam::657026912035:role/ECR-role
-
           aws-region: ${{ env.AWS_REGION }}
  
-      # Build and push backend image
-
+      # Backend image
       - name: Build and push Backend Docker image
-
         working-directory: ./DCS4-Backend
-
         run: |
-
-          docker build -t ${{ env.ECR_REPOSITORY }}:${{ env.BACKEND_IMAGE_TAG }} .
+          # Build with full ECR repository URI
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.BACKEND_IMAGE_TAG }} .
           
+          # Login to ECR
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
           
+          # Push to ECR
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.BACKEND_IMAGE_TAG }}
  
-      # Build and push frontend image
-
+      # Frontend image
       - name: Build and push Frontend Docker image
-
         working-directory: ./DCS4-Frontend
-
         run: |
-
-          docker build -t ${{ env.ECR_REPOSITORY }}:${{ env.FRONTEND_IMAGE_TAG }} .
-
+          # Build with full ECR repository URI
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.FRONTEND_IMAGE_TAG }} .
+          
+          # Login to ECR (only needed once per job, but harmless to repeat)
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-
+          
+          # Push to ECR
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.FRONTEND_IMAGE_TAG }}
- 
