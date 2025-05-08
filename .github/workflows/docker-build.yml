@@ -16,8 +16,7 @@ env:
 
   ECR_REPOSITORY: "dc-container-repo" 
   
-  BACKEND_IMAGE_TAG: "backend-latest" # You can customize the tag
-
+  BACKEND_IMAGE_TAG: "backend-latest" 
   FRONTEND_IMAGE_TAG: "frontend-latest" # You can customize the tag
  
 permissions:
