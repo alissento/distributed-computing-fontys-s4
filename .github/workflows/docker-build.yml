@@ -33,7 +33,7 @@ jobs:
  
       # Backend image
       - name: Build and push Backend Docker image
-        working-directory: ./DCS4-Backend
+        working-directory: ./DCS4-Backend 
         run: |
           # Build with full ECR repository URI
           docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.BACKEND_IMAGE_TAG }} .
