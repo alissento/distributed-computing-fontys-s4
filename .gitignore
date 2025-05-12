@@ -37,3 +37,6 @@ crash.*.log
 **/terraform.rc
 
 # test
+
+# Ignore .env files (add this line to exclude .env from Git)
+.env*

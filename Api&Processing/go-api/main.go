@@ -1,10 +1,18 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
 
@@ -19,15 +27,27 @@ var (
 	alphaVantageAPIKey  string
 	alphaVantageBaseURL string
 	StockDataBucketName string
+	s3Client            *s3.Client
+	sqsClient           *sqs.Client
+	awsname             string
+	awspassword         string
 )
 
 // initialize the request
 type JobRequest struct {
 	S3Key          string `json:"s3_key"`
 	ProcessingType string `json:"processing_type"`
+	StartDate      string `json:"start_date"`
 	JumpDays       int    `json:"jump_days"`
 	EndDate        string `json:"end_date"`
 	JobID          string `json:"job_id"`
+}
+type RequestData struct {
+	StockSymbol    string `json:"stock_symbol"`
+	ProcessingType string `json:"processing_type"`
+	StartDate      string `json:"start_date"`
+	EndDate        string `json:"end_date"`
+	JumpDays       int    `json:"jump_days"`
 }
 
 func main() {
@@ -52,10 +72,54 @@ func main() {
 	alphaVantageAPIKey = os.Getenv("ALPHAVANTAGE_KEY")
 	alphaVantageBaseURL = os.Getenv("ALPHAVANTAGE_BASE_URL")
 	StockDataBucketName = os.Getenv("STOCK_DATA_BUCKET")
+	awsname = os.Getenv("AWS_NAME")
+	awspassword = os.Getenv("AWS_PASSWORD")
+
+	// Load the AWS SDK configuration with correct LocalStack endpoint for both SQS and S3
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(region),
+		config.WithCredentialsProvider(
+			aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(awsname, awspassword, ""))),
+		config.WithEndpointResolver(aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+			if service == s3.ServiceID {
+				// Explicitly set the endpoint for S3
+				return aws.Endpoint{
+					URL:               endpoint,
+					HostnameImmutable: true, // Prevents host rewriting
+				}, nil
+			}
+			if service == sqs.ServiceID {
+				// Explicitly set the endpoint for SQS
+				return aws.Endpoint{
+					URL:               endpoint,
+					HostnameImmutable: true, // Prevents host rewriting
+				}, nil
+			}
+			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested for service: %s", service)
+		})),
+	)
+	if err != nil {
+		log.Fatal("Failed to load config:", err)
+	}
+
+	s3Client = s3.NewFromConfig(cfg)
+	sqsClient = sqs.NewFromConfig(cfg)
 
 	// Start the HTTP server with the submit handler
 
-	http.HandleFunc("/submit", HandleSubmit)
+	r := mux.NewRouter()
+	// Exact match for /stocks
+	r.HandleFunc("/stocks", Handle_Stock_Symbols).Methods("GET")
+
+	// Match with path parameter
+	r.HandleFunc("/stocks/{stock_name}", Handle_Stock_Request).Methods("GET")
+
+	// // Historical data route (replace "stocknaam" with actual param if needed)
+	// r.HandleFunc("/stocks/history/{stock_name}", Handle_Stock_History).Methods("GET")
+
+	// // Job status route
+	// r.HandleFunc("/job/jobstatus", Handle_Job_Status).Methods("GET")
+
 	log.Println("API server running on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
