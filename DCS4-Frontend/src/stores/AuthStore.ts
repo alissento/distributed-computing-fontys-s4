@@ -99,7 +99,7 @@ export const useAuthStore = create<AuthStore>()(
                     throw error;
                 }
             },
-
+            // Check auth status from cache if available or force skip cache
             checkAuth: async (force = false) => {
                 // Skip check if recently validated and not forced
                 const { lastChecked, isLoading } = get();
@@ -108,7 +108,7 @@ export const useAuthStore = create<AuthStore>()(
                 if (isLoading) {
                     return get().isAuthenticated;
                 }
-                
+
                 if (isCacheValid && !force) {
                     return get().isAuthenticated;
                 }
