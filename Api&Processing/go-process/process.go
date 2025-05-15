@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 
-	// "fmt"
 	"log"
 )
 
@@ -32,7 +31,7 @@ func processJob(key string) {
 	}
 	// Process the stock data based on the processing type ADD MORE HERE IF U WANT
 	switch job.ProcessingType {
-	case "moving_average":
+	case "Test":
 		predictions := movingAverage(stockData, job.JumpDays)
 
 		err := savePredictionsToS3(job.JobID, predictions, "results/")
@@ -40,15 +39,28 @@ func processJob(key string) {
 			log.Println("Error saving predictions:", err)
 			return
 		}
-		// send result to SQS (move to seperate file later geen tijd)
-		// result := JobResult{
-		// 	JobID:       job.JobID,
-		// 	Status:      "completed",
-		// 	ResultS3Key: fmt.Sprintf("results/%s.json", job.JobID),
-		// }
-		// if err := sendResultToSQS(result); err != nil {
-		// 	log.Println("Error sending result to SQS:", err)
-		// }
+	// case "Sale_Recommendation":
+	// 	predictions := PredictWithEMACrossover(stockData, 1, 2)
+	// 	err := savePredictionsToS3(job.JobID, predictions, "results/")
+	// 	if err != nil {
+	// 		log.Println("Error saving predictions:", err)
+	// 		return
+	// 	}
+
+	case "Predict_Average":
+		predictions, err := PredictAverage(stockData, job)
+
+		if err != nil {
+			log.Println("Error during prediction:", err)
+			return
+		}
+
+		// Save the predictions to S3
+		err = savePredictionsToS3(job.JobID, predictions, "results/")
+		if err != nil {
+			log.Println("Error saving predictions:", err)
+			return
+		}
 
 	default:
 		log.Println("Unknown processing type:", job.ProcessingType)
@@ -57,3 +69,24 @@ func processJob(key string) {
 	}
 
 }
+
+// func makePredictionSeries(start time.Time, value float64, jumpDays, count int) map[string]map[string]string {
+// 	predictions := make(map[string]map[string]string)
+
+// 	valStr := fmt.Sprintf("%.2f", value)
+
+// 	for i := 1; i <= count; i++ {
+
+// 		date := start.AddDate(0, 0, i*jumpDays).Format("2006-01-02")
+
+// 		predictions[date] = map[string]string{
+// 			"1. open":   valStr,
+// 			"2. high":   valStr,
+// 			"3. low":    valStr,
+// 			"4. close":  valStr,
+// 			"5. volume": "0",
+// 		}
+// 	}
+
+// 	return predictions
+// }

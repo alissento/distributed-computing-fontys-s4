@@ -10,6 +10,18 @@ import (
 
 func FetchStockData(symbol string) (map[string]interface{}, error) {
 	// (TODO check if this logic can be used for injection!) %s means it will replace it with the value that comes after it.
+	var data map[string]interface{}
+
+	data, err := FetchStockDataFromS3(StockDataBucketName, symbol)
+	if err != nil {
+		log.Println("Error fetching data from S3:", err)
+	}
+	if err == nil {
+		return data, nil
+	}
+
+	// If not found, fetch from Alpha Vantage
+
 	url := fmt.Sprintf("%ssymbol=%s&exchange=&outputsize=full&datatype=json&function=TIME_SERIES_DAILY&apikey=%s", alphaVantageBaseURL, symbol, alphaVantageAPIKey)
 	log.Println("Fetching data from URL:", url) // check hoe het hier aankomt! (ToDo)
 	// Send the request
@@ -37,11 +49,23 @@ func FetchStockData(symbol string) (map[string]interface{}, error) {
 	}
 
 	// Parsee json response
-	var data map[string]interface{} //map to hold the JsoN data
+	//map to hold the JsoN data
 	if err := json.Unmarshal(body, &data); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON: %w", err)
 	}
-
-	log.Println("Data:", data) // check hoe het hier aankomt! (ToDo)
 	return (data), nil
+}
+func FetchStockDataFromS3(bucketName, symbol string) (map[string]interface{}, error) {
+	jsonString, err := DownloadStockDataFromS3(bucketName, symbol)
+	if err != nil {
+		return nil, err
+	}
+
+	var data map[string]interface{}
+	err = json.Unmarshal([]byte(jsonString), &data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse stock data JSON: %w", err)
+	}
+
+	return data, nil
 }
