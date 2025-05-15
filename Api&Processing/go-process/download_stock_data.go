@@ -11,13 +11,12 @@ import (
 )
 
 func downloadStockData(s3Key string) (string, error) {
-	// Debug log to see the file and bucket name you're looking for
+	// Debug log delete later aub(TODO)
 	log.Printf("Looking for file: %s in bucket: %s", s3Key, StockDataBucketName)
 
-	// ing the s3Client configured with LocalStack
-	obj, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
-		Bucket: &StockDataBucketName,
-		Key:    aws.String(s3Key),
+	obj, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{ // Get the object from S3
+		Bucket: &StockDataBucketName, // Specify the bucket name
+		Key:    aws.String(s3Key),    // Specify the key (file name) of the object to retrieve
 	})
 	if err != nil {
 		// Log the error if we fail to get the object
@@ -25,7 +24,7 @@ func downloadStockData(s3Key string) (string, error) {
 	}
 	defer obj.Body.Close()
 
-	// Log the size of the file retrieved
+	// FILE SIZE DEBUG LOG (TODO) delete LATER
 	log.Printf("Successfully retrieved object from S3, size: %d bytes", obj.ContentLength)
 
 	// Read the content of the object
