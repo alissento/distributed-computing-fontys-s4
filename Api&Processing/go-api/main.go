@@ -114,8 +114,8 @@ func main() {
 	// Match with path parameter
 	r.HandleFunc("/stocks/{stock_name}", Handle_Stock_Request).Methods("GET")
 
-	// // Historical data route (replace "stocknaam" with actual param if needed)
-	// r.HandleFunc("/stocks/history/{stock_name}", Handle_Stock_History).Methods("GET")
+	// Historical data route (replace "stocknaam" with actual param if needed)
+	r.HandleFunc("/stocks/history/{stock_name}", Handle_Stock_History).Methods("GET")
 
 	// // Job status route
 	// r.HandleFunc("/job/jobstatus", Handle_Job_Status).Methods("GET")

@@ -3,9 +3,7 @@ package main
 import (
 	"encoding/json"
 
-	"fmt"
 	"log"
-	"time"
 )
 
 // process the job met operation
@@ -41,6 +39,14 @@ func processJob(key string) {
 			log.Println("Error saving predictions:", err)
 			return
 		}
+	// case "Sale_Recommendation":
+	// 	predictions := PredictWithEMACrossover(stockData, 1, 2)
+	// 	err := savePredictionsToS3(job.JobID, predictions, "results/")
+	// 	if err != nil {
+	// 		log.Println("Error saving predictions:", err)
+	// 		return
+	// 	}
+
 	case "Predict_Average":
 		predictions, err := PredictAverage(stockData, job)
 
@@ -63,23 +69,24 @@ func processJob(key string) {
 	}
 
 }
-func makePredictionSeries(start time.Time, value float64, jumpDays, count int) map[string]map[string]string {
-	predictions := make(map[string]map[string]string)
 
-	valStr := fmt.Sprintf("%.2f", value)
+// func makePredictionSeries(start time.Time, value float64, jumpDays, count int) map[string]map[string]string {
+// 	predictions := make(map[string]map[string]string)
 
-	for i := 1; i <= count; i++ {
+// 	valStr := fmt.Sprintf("%.2f", value)
 
-		date := start.AddDate(0, 0, i*jumpDays).Format("2006-01-02")
+// 	for i := 1; i <= count; i++ {
 
-		predictions[date] = map[string]string{
-			"1. open":   valStr,
-			"2. high":   valStr,
-			"3. low":    valStr,
-			"4. close":  valStr,
-			"5. volume": "0",
-		}
-	}
+// 		date := start.AddDate(0, 0, i*jumpDays).Format("2006-01-02")
 
-	return predictions
-}
+// 		predictions[date] = map[string]string{
+// 			"1. open":   valStr,
+// 			"2. high":   valStr,
+// 			"3. low":    valStr,
+// 			"4. close":  valStr,
+// 			"5. volume": "0",
+// 		}
+// 	}
+
+// 	return predictions
+// }
