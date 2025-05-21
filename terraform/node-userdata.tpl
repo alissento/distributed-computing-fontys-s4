@@ -39,6 +39,7 @@ if [ "$NODE_TYPE" == "control-plane" ]; then
     git clone https://github.com/alissento/distributed-computing-fontys-s4.git
     kubectl apply -f distributed-computing-fontys-s4/Kubernetes/nginx-deployment-test.yml
     kubectl apply -f distributed-computing-fontys-s4/Kubernetes/nginx-service-test.yml
+    echo "Nginx deployment and service applied"
 elif [ "$NODE_TYPE" == "worker-node" ]; then
     echo "Worker node detected, downloading shell script to install worker node software"
 

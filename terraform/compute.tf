@@ -16,7 +16,7 @@ resource "aws_launch_template" "worker-node-launch-template" {
   name_prefix   = "worker-node-launch-template"
   image_id      = data.aws_ami.ubuntu-2404.id
   instance_type = "t3a.medium"
-  security_group_names = [ aws_security_group.worker-node-sg.name ]
+  security_group_names = [ aws_security_group.worker-node-sg.id ]
   iam_instance_profile {
     name = aws_iam_instance_profile.worker-node-instance-profile.name
   }
@@ -90,6 +90,7 @@ resource "aws_iam_role_policy_attachment" "worker-node-ec2-tag-policy-attachment
 }
 
 resource "aws_autoscaling_group" "worker-node-asg" {
+  name = "worker-node-asg"
   desired_capacity    = 1
   max_size            = 3
   min_size            = 1
@@ -165,6 +166,12 @@ resource "aws_instance" "control-plane" {
   }
   tags = {
     NodeType = "control-plane"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      tags["Name"],
+    ]
   }
 
   depends_on = [aws_s3_object.master_node_script, aws_nat_gateway.kubernetes-nat-gateway]
