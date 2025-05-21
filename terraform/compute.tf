@@ -127,8 +127,6 @@ resource "aws_vpc_security_group_ingress_rule" "allow_all_traffic_ingress" {
   security_group_id = aws_security_group.worker-node-sg.id
   cidr_ipv4         = aws_vpc.kubernetes-vpc.cidr_block
   ip_protocol       = "-1"
-  from_port         = 0
-  to_port           = 0
   description       = "Allow all traffic from the VPC"
 }
 
