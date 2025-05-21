@@ -1,8 +1,8 @@
 resource "aws_sqs_queue" "my_sqs_queue" {
-  name                      = "ApplicationQueue"
-  delay_seconds             = 10
-  max_message_size          = 262144
-  message_retention_seconds = 86400
+  name                       = "ApplicationQueue"
+  delay_seconds              = 10
+  max_message_size           = 262144
+  message_retention_seconds  = 86400
   visibility_timeout_seconds = 30
 
   tags = {

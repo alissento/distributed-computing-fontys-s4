@@ -93,7 +93,11 @@ resource "aws_autoscaling_group" "worker-node-asg" {
   max_size            = 3
   min_size            = 1
   vpc_zone_identifier = [aws_subnet.wkn-a.id, aws_subnet.wkn-b.id, aws_subnet.wkn-c.id]
+  target_group_arns   = [aws_lb_target_group.worker-node-target-group.arn]
 
+  health_check_type         = "ELB"
+  health_check_grace_period = 300
+  force_delete              = true
   launch_template {
     id      = aws_launch_template.worker-node-launch-template.id
     version = "$Latest"
@@ -106,7 +110,7 @@ resource "aws_autoscaling_group" "worker-node-asg" {
     propagate_at_launch = true
   }
 
-  depends_on = [ aws_instance.control-plane, aws_s3_object.worker_node_script, aws_nat_gateway.kubernetes-nat-gateway ]
+  depends_on = [aws_instance.control-plane, aws_s3_object.worker_node_script, aws_nat_gateway.kubernetes-nat-gateway]
 }
 
 resource "aws_instance" "control-plane" {
@@ -123,5 +127,5 @@ resource "aws_instance" "control-plane" {
     NodeType = "control-plane"
   }
 
-  depends_on = [ aws_s3_object.master_node_script, aws_nat_gateway.kubernetes-nat-gateway ]
+  depends_on = [aws_s3_object.master_node_script, aws_nat_gateway.kubernetes-nat-gateway]
 }
