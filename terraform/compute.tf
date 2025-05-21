@@ -111,7 +111,7 @@ resource "aws_autoscaling_group" "worker-node-asg" {
     propagate_at_launch = true
   }
 
-  depends_on = [aws_instance.control-plane, aws_s3_object.worker_node_script, aws_nat_gateway.kubernetes-nat-gateway]
+  depends_on = [aws_instance.control-plane, aws_s3_object.worker_node_script, aws_nat_gateway.kubernetes-nat-gateway, aws_launch_template.worker-node-launch-template]
 }
 
 resource "aws_security_group" "worker-node-sg" {
