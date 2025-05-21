@@ -96,7 +96,7 @@ resource "aws_autoscaling_group" "worker-node-asg" {
   min_size            = 1
   vpc_zone_identifier = [aws_subnet.wkn-a.id, aws_subnet.wkn-b.id, aws_subnet.wkn-c.id]
   target_group_arns   = [aws_lb_target_group.worker-node-target-group.arn]
-  health_check_type         = "ELB"
+  health_check_type         = "EC2"
   health_check_grace_period = 300
   force_delete              = true
   launch_template {
