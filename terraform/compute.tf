@@ -16,7 +16,7 @@ resource "aws_launch_template" "worker-node-launch-template" {
   name_prefix   = "worker-node-launch-template"
   image_id      = data.aws_ami.ubuntu-2404.id
   instance_type = "t3a.medium"
-  security_group_names = [ aws_security_group.worker-node-sg.id ]
+  vpc_security_group_ids = [ aws_security_group.worker-node-sg.id ]
   iam_instance_profile {
     name = aws_iam_instance_profile.worker-node-instance-profile.name
   }
