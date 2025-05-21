@@ -123,29 +123,15 @@ resource "aws_security_group" "worker-node-sg" {
   }
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_kubelet" {
+resource "aws_vpc_security_group_ingress_rule" "allow_all_traffic_ingress" {
   security_group_id = aws_security_group.worker-node-sg.id
   cidr_ipv4         = aws_vpc.kubernetes-vpc.cidr_block
-  from_port         = 10250
-  ip_protocol       = "tcp"
-  to_port           = 10250
+  ip_protocol       = "-1"
+  from_port         = 0
+  to_port           = 0
+  description       = "Allow all traffic from the VPC"
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_kube_proxy" {
-  security_group_id = aws_security_group.worker-node-sg.id
-  cidr_ipv4        = aws_vpc.kubernetes-vpc.cidr_block
-  from_port         = 10256
-  ip_protocol       = "tcp"
-  to_port           = 10256
-}
-
-resource "aws_vpc_security_group_ingress_rule" "allow_node_port" {
-  security_group_id = aws_security_group.worker-node-sg.id
-  cidr_ipv4        = aws_vpc.kubernetes-vpc.cidr_block
-  from_port         = 30000
-  ip_protocol       = "tcp"
-  to_port           = 32767
-}
 
 resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
   security_group_id = aws_security_group.worker-node-sg.id
