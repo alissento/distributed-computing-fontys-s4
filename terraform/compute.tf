@@ -16,6 +16,7 @@ resource "aws_launch_template" "worker-node-launch-template" {
   name_prefix   = "worker-node-launch-template"
   image_id      = data.aws_ami.ubuntu-2404.id
   instance_type = "t3a.medium"
+  security_group_names = [ aws_security_group.worker-node-sg.name ]
   iam_instance_profile {
     name = aws_iam_instance_profile.worker-node-instance-profile.name
   }
@@ -94,7 +95,6 @@ resource "aws_autoscaling_group" "worker-node-asg" {
   min_size            = 1
   vpc_zone_identifier = [aws_subnet.wkn-a.id, aws_subnet.wkn-b.id, aws_subnet.wkn-c.id]
   target_group_arns   = [aws_lb_target_group.worker-node-target-group.arn]
-
   health_check_type         = "ELB"
   health_check_grace_period = 300
   force_delete              = true
@@ -112,6 +112,46 @@ resource "aws_autoscaling_group" "worker-node-asg" {
 
   depends_on = [aws_instance.control-plane, aws_s3_object.worker_node_script, aws_nat_gateway.kubernetes-nat-gateway]
 }
+
+resource "aws_security_group" "worker-node-sg" {
+  name        = "worker-node-sg"
+  description = "Worker Node Security Group"
+  vpc_id      = aws_vpc.kubernetes-vpc.id
+  tags = {
+    Name = "worker-node-sg"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_kubelet" {
+  security_group_id = aws_security_group.worker-node-sg.id
+  cidr_ipv4         = aws_vpc.kubernetes-vpc.cidr_block
+  from_port         = 10250
+  ip_protocol       = "tcp"
+  to_port           = 10250
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_kube_proxy" {
+  security_group_id = aws_security_group.worker-node-sg.id
+  cidr_ipv4        = aws_vpc.kubernetes-vpc.cidr_block
+  from_port         = 10256
+  ip_protocol       = "tcp"
+  to_port           = 10256
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_node_port" {
+  security_group_id = aws_security_group.worker-node-sg.id
+  cidr_ipv4        = aws_vpc.kubernetes-vpc.cidr_block
+  from_port         = 30000
+  ip_protocol       = "tcp"
+  to_port           = 32767
+}
+
+resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
+  security_group_id = aws_security_group.worker-node-sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
 
 resource "aws_instance" "control-plane" {
   ami                  = data.aws_ami.ubuntu-2404.id

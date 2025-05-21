@@ -8,7 +8,7 @@ echo "Installing AWS CLI, Ansible, unzip, htp and other dependencies necessary f
 
 apt update
 apt upgrade -y
-apt install -y ansible unzip htop apt-transport-https ca-certificates curl gnupg lsb-release gpg
+apt install -y ansible unzip htop apt-transport-https ca-certificates curl gnupg lsb-release gpg git
 
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
@@ -35,6 +35,10 @@ if [ "$NODE_TYPE" == "control-plane" ]; then
     chmod +x /tmp/masternode.sh
     /tmp/masternode.sh
     echo "Master node setup completed"
+    cd /home/ubuntu
+    git clone https://github.com/alissento/distributed-computing-fontys-s4.git
+    kubectl apply -f distributed-computing-fontys-s4/Kubernetes/nginx-deployment-test.yml
+    kubectl apply -f distributed-computing-fontys-s4/Kubernetes/nginx-service-test.yml
 elif [ "$NODE_TYPE" == "worker-node" ]; then
     echo "Worker node detected, downloading shell script to install worker node software"
 
