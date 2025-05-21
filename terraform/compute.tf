@@ -125,7 +125,7 @@ resource "aws_security_group" "worker-node-sg" {
 
 resource "aws_vpc_security_group_ingress_rule" "allow_all_traffic_ingress" {
   security_group_id = aws_security_group.worker-node-sg.id
-  cidr_ipv4         = aws_vpc.kubernetes-vpc.cidr_block
+  cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
   description       = "Allow all traffic from the VPC"
 }
@@ -137,6 +137,27 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
   ip_protocol       = "-1"
 }
 
+resource "aws_security_group" "control-plane-sg" {
+  name        = "control-plane-sg"
+  description = "Control Plane Security Group"
+  vpc_id      = aws_vpc.kubernetes-vpc.id
+  tags = {
+    Name = "control-plane-sg"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_all_traffic_ingress_cp" {
+  security_group_id = aws_security_group.control-plane-sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
+resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_cp" {
+  security_group_id = aws_security_group.control-plane-sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
 
 resource "aws_instance" "control-plane" {
   ami                  = data.aws_ami.ubuntu-2404.id
@@ -144,6 +165,7 @@ resource "aws_instance" "control-plane" {
   subnet_id            = aws_subnet.cp-a.id
   user_data            = local.node-user-data
   iam_instance_profile = aws_iam_instance_profile.worker-node-instance-profile.name
+  vpc_security_group_ids = [ aws_security_group.control-plane-sg.id ]
   ebs_block_device {
     device_name = "/dev/sda1"
     volume_size = 30
