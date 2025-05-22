@@ -1,11 +1,12 @@
-resource "aws_db_subnet_group" "my_db_subnet_group" {
-  name       = "my-db-subnet-group"
+resource "aws_db_subnet_group" "db_subnet_group" {
+  name       = "db-subnet-group"
   subnet_ids = [aws_subnet.rds-b.id, aws_subnet.rds-c.id]
 }
 
-resource "aws_db_instance" "main_rds_instance" {
+resource "aws_db_instance" "postgresql_rds" {
   identifier           = "main-rds-instance"
   instance_class       = "db.t3.medium"
+  db_name              = "postgres-kubernetes"
   engine               = "postgres"
   username             = "db_admin"
   password             = "password"

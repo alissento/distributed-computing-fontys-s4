@@ -1,10 +1,10 @@
 resource "aws_lb" "kubernetes-nlb" {
-  name               = "kubernetes-nlb"
-  internal           = false
-  load_balancer_type = "network"
-  subnets            = [aws_subnet.public-a.id, aws_subnet.public-b.id, aws_subnet.public-c.id]
+  name                             = "kubernetes-nlb"
+  internal                         = false
+  load_balancer_type               = "network"
+  subnets                          = [aws_subnet.public-a.id, aws_subnet.public-b.id, aws_subnet.public-c.id]
   enable_cross_zone_load_balancing = true
-  enable_deletion_protection = false
+  enable_deletion_protection       = false
 }
 
 resource "aws_lb_listener" "listener-nlb" {

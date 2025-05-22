@@ -13,10 +13,10 @@ data "aws_ami" "ubuntu-2404" {
 }
 
 resource "aws_launch_template" "worker-node-launch-template" {
-  name_prefix   = "worker-node-launch-template"
-  image_id      = data.aws_ami.ubuntu-2404.id
-  instance_type = "t3a.medium"
-  vpc_security_group_ids = [ module.worker-node-sg.security_group_id ]
+  name_prefix            = "worker-node-launch-template"
+  image_id               = data.aws_ami.ubuntu-2404.id
+  instance_type          = "t3a.medium"
+  vpc_security_group_ids = [module.worker-node-sg.security_group_id]
   iam_instance_profile {
     name = aws_iam_instance_profile.worker-node-instance-profile.name
   }
@@ -95,12 +95,12 @@ resource "aws_iam_role_policy_attachment" "worker-node-ec2-tag-policy-attachment
 }
 
 resource "aws_autoscaling_group" "worker-node-asg" {
-  name = "worker-node-asg"
-  desired_capacity    = 1
-  max_size            = 3
-  min_size            = 1
-  vpc_zone_identifier = [aws_subnet.wkn-a.id, aws_subnet.wkn-b.id, aws_subnet.wkn-c.id]
-  target_group_arns   = [aws_lb_target_group.worker-node-target-group.arn]
+  name                      = "worker-node-asg"
+  desired_capacity          = 1
+  max_size                  = 3
+  min_size                  = 1
+  vpc_zone_identifier       = [aws_subnet.wkn-a.id, aws_subnet.wkn-b.id, aws_subnet.wkn-c.id]
+  target_group_arns         = [aws_lb_target_group.worker-node-target-group.arn]
   health_check_type         = "EC2"
   health_check_grace_period = 300
   force_delete              = true
@@ -143,7 +143,7 @@ module "worker-node-sg" {
     }
   ]
 
-    egress_with_cidr_blocks = [
+  egress_with_cidr_blocks = [
     {
       from_port   = 0
       to_port     = 0
@@ -183,12 +183,12 @@ module "cluster-plane-sg" {
 }
 
 resource "aws_instance" "control-plane" {
-  ami                  = data.aws_ami.ubuntu-2404.id
-  instance_type        = "t3a.medium"
-  subnet_id            = aws_subnet.cp-a.id
-  user_data            = local.node-user-data
-  iam_instance_profile = aws_iam_instance_profile.worker-node-instance-profile.name
-  vpc_security_group_ids = [ module.cluster-plane-sg.security_group_id ]
+  ami                    = data.aws_ami.ubuntu-2404.id
+  instance_type          = "t3a.medium"
+  subnet_id              = aws_subnet.cp-a.id
+  user_data              = local.node-user-data
+  iam_instance_profile   = aws_iam_instance_profile.worker-node-instance-profile.name
+  vpc_security_group_ids = [module.cluster-plane-sg.security_group_id]
   ebs_block_device {
     device_name = "/dev/sda1"
     volume_size = 30
