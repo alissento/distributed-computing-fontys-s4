@@ -21,6 +21,6 @@ spec:
         image: 657026912035.dkr.ecr.eu-west-1.amazonaws.com/dc-container-repo:frontend-latest
         ports:
         - containerPort: 80
-    env:
-    - name: VITE_API_URL
-      value: "http://backend-service:9090"
+        env:
+        - name: VITE_API_URL
+          value: "http://backend-service:9090"
