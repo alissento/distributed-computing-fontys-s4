@@ -9,7 +9,7 @@ resource "aws_lb" "kubernetes-nlb" {
 
 resource "aws_lb_listener" "listener-nlb" {
   load_balancer_arn = aws_lb.kubernetes-nlb.arn
-  port              = "30080"
+  port              = "80"
   protocol          = "TCP"
 
   default_action {
