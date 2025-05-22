@@ -10,7 +10,7 @@ resource "aws_db_instance" "postgresql_rds" {
   engine               = "postgres"
   username             = "db_admin"
   password             = "password"
-  db_subnet_group_name = aws_db_subnet_group.my_db_subnet_group.name
+  db_subnet_group_name = aws_db_subnet_group.db_subnet_group.name
   multi_az             = true
   publicly_accessible  = false
   allocated_storage    = 20
