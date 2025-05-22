@@ -54,3 +54,7 @@ spec:
             secretKeyRef:
               name: jwt-secret
               key: JWT_SECRET
+        - name: SERVER_PORT
+          value: "9090"
+        - name: SPRING_PROFILE
+          value: "prod"
