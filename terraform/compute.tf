@@ -114,51 +114,6 @@ resource "aws_autoscaling_group" "worker-node-asg" {
   depends_on = [aws_instance.control-plane, aws_s3_object.worker_node_script, aws_nat_gateway.kubernetes-nat-gateway, aws_launch_template.worker-node-launch-template]
 }
 
-# resource "aws_security_group" "worker-node-sg" {
-#   name        = "worker-node-sg"
-#   description = "Worker Node Security Group"
-#   vpc_id      = aws_vpc.kubernetes-vpc.id
-#   tags = {
-#     Name = "worker-node-sg"
-#   }
-# }
-
-# resource "aws_vpc_security_group_ingress_rule" "allow_all_traffic_ingress" {
-#   security_group_id = aws_security_group.worker-node-sg.id
-#   cidr_ipv4         = "0.0.0.0/0"
-#   ip_protocol       = "-1"
-#   description       = "Allow all traffic from the VPC"
-# }
-
-
-# resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
-#   security_group_id = aws_security_group.worker-node-sg.id
-#   cidr_ipv4         = "0.0.0.0/0"
-#   ip_protocol       = "-1"
-# }
-
-# resource "aws_security_group" "control-plane-sg" {
-#   name        = "control-plane-sg"
-#   description = "Control Plane Security Group"
-#   vpc_id      = aws_vpc.kubernetes-vpc.id
-#   tags = {
-#     Name = "control-plane-sg"
-#   }
-# }
-
-# resource "aws_vpc_security_group_ingress_rule" "allow_all_traffic_ingress_cp" {
-#   security_group_id = aws_security_group.control-plane-sg.id
-#   cidr_ipv4         = "0.0.0.0/0"
-#   ip_protocol       = "-1"
-# }
-
-# resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_cp" {
-#   security_group_id = aws_security_group.control-plane-sg.id
-#   cidr_ipv4         = "0.0.0.0/0"
-#   ip_protocol       = "-1"
-# }
-
-
 module "worker-node-sg" {
   source = "terraform-aws-modules/security-group/aws"
 
