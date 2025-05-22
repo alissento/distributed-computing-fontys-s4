@@ -175,6 +175,16 @@ module "worker-node-sg" {
       description = "Allow all traffic from the VPC"
     },
   ]
+
+    egress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = "0.0.0.0/0"
+      description = "Allow all traffic to the internet"
+    },
+  ]
 }
 
 module "cluster-plane-sg" {
@@ -191,6 +201,16 @@ module "cluster-plane-sg" {
       protocol    = "-1"
       cidr_blocks = "10.0.0.0/20"
       description = "Allow all traffic from the VPC"
+    },
+  ]
+
+  egress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = "0.0.0.0/0"
+      description = "Allow all traffic to the internet"
     },
   ]
 }
