@@ -23,6 +23,10 @@ AZ=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/me
 NODE_TYPE=$(aws ec2 describe-tags --filters "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=NodeType" --region $REGION --query "Tags[0].Value" --output text)
 TAG_NAME="$NODE_TYPE-$AZ-${INSTANCE_ID: -8}"
 
+AWS_ACCOUNT_ID="657026912035"
+ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
+ECR_PASSWORD=$(aws ecr get-login-password --region "${REGION}")
+
 aws ec2 create-tags --resources $INSTANCE_ID --tags Key=Name,Value=$TAG_NAME --region $REGION
 echo "Instance tagged with Name: $TAG_NAME"
 
@@ -35,11 +39,14 @@ if [ "$NODE_TYPE" == "control-plane" ]; then
     chmod +x /tmp/masternode.sh
     /tmp/masternode.sh
     echo "Master node setup completed"
-    cd /home/ubuntu
-    git clone https://github.com/alissento/distributed-computing-fontys-s4.git
-    kubectl apply -f distributed-computing-fontys-s4/Kubernetes/nginx-deployment-test.yml
-    kubectl apply -f distributed-computing-fontys-s4/Kubernetes/nginx-service-test.yml
-    echo "Nginx deployment and service applied"
+
+    kubectl create secret docker-registry ecr-registry-secret \
+    --docker-server="${ECR_REGISTRY}" \
+    --docker-username=AWS \
+    --docker-password="${ECR_PASSWORD}" \
+    --docker-email=no-reply@example.com
+    echo "Docker registry secret created"
+
 elif [ "$NODE_TYPE" == "worker-node" ]; then
     echo "Worker node detected, downloading shell script to install worker node software"
 
