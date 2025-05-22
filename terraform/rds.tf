@@ -6,7 +6,7 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 resource "aws_db_instance" "postgresql_rds" {
   identifier           = "main-rds-instance"
   instance_class       = "db.t3.medium"
-  db_name              = "postgres-kubernetes"
+  db_name              = "postgresdb"
   engine               = "postgres"
   username             = "db_admin"
   password             = "password"
