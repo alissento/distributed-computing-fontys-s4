@@ -129,6 +129,13 @@ module "worker-node-sg" {
       cidr_blocks = "10.0.0.0/20"
       description = "Allow all traffic from the VPC"
     },
+    {
+      from_port   = 30080
+      to_port     = 30080
+      protocol    = "tcp"
+      cidr_blocks = "0.0.0.0/0"
+      description = "Allow traffic from the Load Balancer to the worker nodes"
+    }
   ]
 
     egress_with_cidr_blocks = [
