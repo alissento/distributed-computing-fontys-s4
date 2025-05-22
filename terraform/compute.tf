@@ -16,7 +16,7 @@ resource "aws_launch_template" "worker-node-launch-template" {
   name_prefix   = "worker-node-launch-template"
   image_id      = data.aws_ami.ubuntu-2404.id
   instance_type = "t3a.medium"
-  vpc_security_group_ids = [ aws_security_group.worker-node-sg.id ]
+  vpc_security_group_ids = [ module.worker-node-sg.security_group_id ]
   iam_instance_profile {
     name = aws_iam_instance_profile.worker-node-instance-profile.name
   }
@@ -114,50 +114,86 @@ resource "aws_autoscaling_group" "worker-node-asg" {
   depends_on = [aws_instance.control-plane, aws_s3_object.worker_node_script, aws_nat_gateway.kubernetes-nat-gateway, aws_launch_template.worker-node-launch-template]
 }
 
-resource "aws_security_group" "worker-node-sg" {
+# resource "aws_security_group" "worker-node-sg" {
+#   name        = "worker-node-sg"
+#   description = "Worker Node Security Group"
+#   vpc_id      = aws_vpc.kubernetes-vpc.id
+#   tags = {
+#     Name = "worker-node-sg"
+#   }
+# }
+
+# resource "aws_vpc_security_group_ingress_rule" "allow_all_traffic_ingress" {
+#   security_group_id = aws_security_group.worker-node-sg.id
+#   cidr_ipv4         = "0.0.0.0/0"
+#   ip_protocol       = "-1"
+#   description       = "Allow all traffic from the VPC"
+# }
+
+
+# resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
+#   security_group_id = aws_security_group.worker-node-sg.id
+#   cidr_ipv4         = "0.0.0.0/0"
+#   ip_protocol       = "-1"
+# }
+
+# resource "aws_security_group" "control-plane-sg" {
+#   name        = "control-plane-sg"
+#   description = "Control Plane Security Group"
+#   vpc_id      = aws_vpc.kubernetes-vpc.id
+#   tags = {
+#     Name = "control-plane-sg"
+#   }
+# }
+
+# resource "aws_vpc_security_group_ingress_rule" "allow_all_traffic_ingress_cp" {
+#   security_group_id = aws_security_group.control-plane-sg.id
+#   cidr_ipv4         = "0.0.0.0/0"
+#   ip_protocol       = "-1"
+# }
+
+# resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_cp" {
+#   security_group_id = aws_security_group.control-plane-sg.id
+#   cidr_ipv4         = "0.0.0.0/0"
+#   ip_protocol       = "-1"
+# }
+
+
+module "worker-node-sg" {
+  source = "terraform-aws-modules/security-group/aws"
+
   name        = "worker-node-sg"
   description = "Worker Node Security Group"
   vpc_id      = aws_vpc.kubernetes-vpc.id
-  tags = {
-    Name = "worker-node-sg"
-  }
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = "10.0.0.0/20"
+      description = "Allow all traffic from the VPC"
+    },
+  ]
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_all_traffic_ingress" {
-  security_group_id = aws_security_group.worker-node-sg.id
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
-  description       = "Allow all traffic from the VPC"
-}
+module "cluster-plane-sg" {
+  source = "terraform-aws-modules/security-group/aws"
 
-
-resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
-  security_group_id = aws_security_group.worker-node-sg.id
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
-}
-
-resource "aws_security_group" "control-plane-sg" {
-  name        = "control-plane-sg"
+  name        = "cluster-plane-sg"
   description = "Control Plane Security Group"
   vpc_id      = aws_vpc.kubernetes-vpc.id
-  tags = {
-    Name = "control-plane-sg"
-  }
-}
 
-resource "aws_vpc_security_group_ingress_rule" "allow_all_traffic_ingress_cp" {
-  security_group_id = aws_security_group.control-plane-sg.id
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = "10.0.0.0/20"
+      description = "Allow all traffic from the VPC"
+    },
+  ]
 }
-
-resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_cp" {
-  security_group_id = aws_security_group.control-plane-sg.id
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
-}
-
 
 resource "aws_instance" "control-plane" {
   ami                  = data.aws_ami.ubuntu-2404.id
@@ -165,7 +201,7 @@ resource "aws_instance" "control-plane" {
   subnet_id            = aws_subnet.cp-a.id
   user_data            = local.node-user-data
   iam_instance_profile = aws_iam_instance_profile.worker-node-instance-profile.name
-  vpc_security_group_ids = [ aws_security_group.control-plane-sg.id ]
+  vpc_security_group_ids = [ module.cluster-plane-sg.security_group_id ]
   ebs_block_device {
     device_name = "/dev/sda1"
     volume_size = 30
