@@ -3,7 +3,7 @@ resource "aws_route53_zone" "hosted_zone" {
 }
 
 resource "aws_route53_record" "http_record" {
-  zone_id = aws_route53_zone.primary.zone_id
+  zone_id = aws_route53_zone.hosted_zone.zone_id
   name    = "norbertknez.me"
   type    = "A"
 
