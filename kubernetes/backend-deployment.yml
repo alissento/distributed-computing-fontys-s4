@@ -20,10 +20,10 @@ spec:
       - name: backend
         image: 657026912035.dkr.ecr.eu-west-1.amazonaws.com/dc-container-repo:backend-latest
         ports:
-        - containerPort: 9090
+        - containerPort: 8080
         env:
         - name: FRONTEND_BASE_URL
-          value: "http://frontend-service:80"
+          value: "https://norbertknez.me"
         - name: DB_HOST
           valueFrom:
             secretKeyRef:
@@ -55,6 +55,6 @@ spec:
               name: jwt-secret
               key: JWT_SECRET
         - name: SERVER_PORT
-          value: "9090"
+          value: "8080"
         - name: SPRING_PROFILE
           value: "prod"
