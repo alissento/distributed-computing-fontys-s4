@@ -19,8 +19,8 @@ WORKDIR /opt/app
 # Copy the built JAR file from the build stage
 COPY --from=build /opt/app/build/libs/DCS4-Backend-0.0.1-SNAPSHOT.jar .
 
-# Expose port 9090
-EXPOSE 9090
+# Expose port 8080
+EXPOSE 8080
 
 # Run the application
 ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar DCS4-Backend-0.0.1-SNAPSHOT.jar"]

@@ -4,18 +4,18 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 }
 
 resource "aws_db_instance" "postgresql_rds" {
-  identifier           = "main-rds-instance"
-  instance_class       = "db.t3.medium"
-  db_name              = "postgresdb"
-  engine               = "postgres"
-  username             = "db_admin"
-  password             = "password"
-  db_subnet_group_name = aws_db_subnet_group.db_subnet_group.name
-  vpc_security_group_ids = [ module.database-sg.security_group_id ]
-  multi_az             = true
-  publicly_accessible  = false
-  allocated_storage    = 20
-  skip_final_snapshot  = true
+  identifier             = "main-rds-instance"
+  instance_class         = "db.t3.medium"
+  db_name                = "postgresdb"
+  engine                 = "postgres"
+  username               = "db_admin"
+  password               = "password"
+  db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.name
+  vpc_security_group_ids = [module.database-sg.security_group_id]
+  multi_az               = true
+  publicly_accessible    = false
+  allocated_storage      = 20
+  skip_final_snapshot    = true
 }
 
 module "database-sg" {

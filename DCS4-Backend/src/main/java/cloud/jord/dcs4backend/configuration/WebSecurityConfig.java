@@ -69,7 +69,9 @@ public class WebSecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
                 "http://localhost:9090",
-                "https://ors.jord.cloud"
+                "https://ors.jord.cloud",
+                "https://norbertknez.me",
+                "https://api.norbertknez.me"
         ));
         
         // Specify allowed methods

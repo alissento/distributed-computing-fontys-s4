@@ -95,12 +95,15 @@ resource "aws_iam_role_policy_attachment" "worker-node-ec2-tag-policy-attachment
 }
 
 resource "aws_autoscaling_group" "worker-node-asg" {
-  name                      = "worker-node-asg"
-  desired_capacity          = 1
-  max_size                  = 3
-  min_size                  = 1
-  vpc_zone_identifier       = [aws_subnet.wkn-a.id, aws_subnet.wkn-b.id, aws_subnet.wkn-c.id]
-  target_group_arns         = [aws_lb_target_group.worker-node-target-group.arn]
+  name                = "worker-node-asg"
+  desired_capacity    = 1
+  max_size            = 3
+  min_size            = 1
+  vpc_zone_identifier = [aws_subnet.wkn-a.id, aws_subnet.wkn-b.id, aws_subnet.wkn-c.id]
+  target_group_arns = [
+    aws_lb_target_group.worker-node-http-target-group.arn,
+    aws_lb_target_group.worker-node-https-target-group.arn
+  ]
   health_check_type         = "EC2"
   health_check_grace_period = 300
   force_delete              = true
@@ -139,7 +142,14 @@ module "worker-node-sg" {
       to_port     = 30080
       protocol    = "tcp"
       cidr_blocks = "0.0.0.0/0"
-      description = "Allow traffic from the Load Balancer to the worker nodes"
+      description = "Allow HTTP traffic from Load Balancer to Traefik"
+    },
+    {
+      from_port   = 30443
+      to_port     = 30443
+      protocol    = "tcp"
+      cidr_blocks = "0.0.0.0/0"
+      description = "Allow HTTPS traffic from Load Balancer to Traefik"
     }
   ]
 
