@@ -45,7 +45,7 @@ resource "aws_lb_target_group" "worker-node-https-target-group" {
     interval            = 30
     timeout             = 5
     protocol            = "TCP"
-    port                = 30443 # Health check on HTTPS port
+    port                = 30443
     unhealthy_threshold = 3
   }
 
@@ -54,7 +54,6 @@ resource "aws_lb_target_group" "worker-node-https-target-group" {
   }
 }
 
-# Target Group for HTTP traffic (port 80 -> NodePort 30080)
 resource "aws_lb_target_group" "worker-node-http-target-group" {
   name     = "worker-node-http-tg"
   port     = 30080
@@ -66,7 +65,7 @@ resource "aws_lb_target_group" "worker-node-http-target-group" {
     interval            = 30
     timeout             = 5
     protocol            = "TCP"
-    port                = 30080 # Health check on HTTP port
+    port                = 30080
     unhealthy_threshold = 3
   }
 
@@ -74,8 +73,6 @@ resource "aws_lb_target_group" "worker-node-http-target-group" {
     Name = "worker-node-http-target-group"
   }
 }
-
-# Output load balancer DNS name for Route53 configuration
 output "load_balancer_dns_name" {
   description = "DNS name of the load balancer"
   value       = aws_lb.kubernetes-nlb.dns_name
