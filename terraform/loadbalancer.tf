@@ -17,12 +17,6 @@ resource "aws_security_group" "alb_sg" {
   name_prefix = "alb-sg"
   vpc_id      = aws_vpc.kubernetes-vpc.id
 
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 
   ingress {
     from_port   = 443
@@ -90,7 +84,7 @@ resource "aws_lb_listener" "listener-alb-http" {
 resource "aws_lb_target_group" "worker-node-https-target-group" {
   name     = "worker-node-https-tg"
   port     = 30443
-  protocol = "HTTP"
+  protocol = "HTTPS"
   vpc_id   = aws_vpc.kubernetes-vpc.id
 
   health_check {
@@ -99,7 +93,7 @@ resource "aws_lb_target_group" "worker-node-https-target-group" {
     interval            = 30
     path                = "/"
     port                = "traffic-port"
-    protocol            = "HTTP"
+    protocol            = "HTTPS"
     timeout             = 5
     unhealthy_threshold = 2
   }
@@ -108,7 +102,7 @@ resource "aws_lb_target_group" "worker-node-https-target-group" {
 resource "aws_lb_target_group" "worker-node-api-target-group" {
   name     = "worker-node-api-tg"
   port     = 30080
-  protocol = "HTTP"
+  protocol = "HTTPS"
   vpc_id   = aws_vpc.kubernetes-vpc.id
 
   health_check {
@@ -118,7 +112,7 @@ resource "aws_lb_target_group" "worker-node-api-target-group" {
     matcher             = "200"
     path                = "/health"
     port                = "traffic-port"
-    protocol            = "HTTP"
+    protocol            = "HTTPS"
     timeout             = 5
     unhealthy_threshold = 2
   }
