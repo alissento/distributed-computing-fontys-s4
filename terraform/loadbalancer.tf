@@ -25,7 +25,7 @@ resource "aws_lb_listener" "listener-nlb-https" {
 
 resource "aws_lb_listener" "listener-nlb-http" {
   load_balancer_arn = aws_lb.kubernetes-nlb.arn
-  port              = "30080"
+  port              = "433"
   protocol          = "TCP"
 
   default_action {
@@ -56,7 +56,7 @@ resource "aws_lb_target_group" "worker-node-https-target-group" {
 
 resource "aws_lb_target_group" "worker-node-http-target-group" {
   name     = "worker-node-http-tg"
-  port     = 30080
+  port     = 8080
   protocol = "TCP"
   vpc_id   = aws_vpc.kubernetes-vpc.id
 
