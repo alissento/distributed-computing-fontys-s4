@@ -26,6 +26,23 @@ func SaveToS3(bucketName, key, data string) error {
 	log.Printf("Successfully uploaded data to S3: %s/%s", bucketName, key)
 	return nil
 }
+func ListAllJobsFromS3(bucketName string) (string, error) {
+	// List all objects in the bucket
+	resp, err := s3Client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+		Bucket: aws.String(bucketName),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to list objects in bucket: %w", err)
+	}
+
+	var buffer bytes.Buffer
+	for _, obj := range resp.Contents {
+		buffer.WriteString(*obj.Key + "\n")
+	}
+
+	log.Printf("Successfully listed objects in bucket: %s", bucketName)
+	return buffer.String(), nil
+}
 
 func DownloadStockDataFromS3(bucketName, key string) (string, error) {
 	// Download data from S3

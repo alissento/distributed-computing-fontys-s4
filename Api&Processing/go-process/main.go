@@ -30,6 +30,7 @@ var (
 	StockDataBucketName string
 	s3Client            *s3.Client
 	sqsClient           *sqs.Client
+	jobBucket           string
 )
 
 type JobRequest struct {
@@ -39,6 +40,7 @@ type JobRequest struct {
 	StartDate      string `json:"start_date"`
 	EndDate        string `json:"end_date"`
 	JobID          string `json:"job_id"`
+	JobStatus      string `json:"job_status"`
 }
 
 type StockData struct {
@@ -74,6 +76,7 @@ func main() {
 	awsname = os.Getenv("AWS_NAME")
 	awspassword = os.Getenv("AWS_PASSWORD")
 	StockDataBucketName = os.Getenv("STOCK_DATA_BUCKET")
+	jobBucket = os.Getenv("JOB_BUCKET")
 
 	// Load the AWS SDK configuration with correct LocalStack endpoint for both SQS and S3
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
