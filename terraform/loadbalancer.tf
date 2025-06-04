@@ -115,10 +115,8 @@ resource "aws_lb_target_group" "worker-node-api-target-group" {
     enabled             = true
     healthy_threshold   = 2
     interval            = 30
-    protocol            = "HTTP"
-    path                = "/"
-    port                = "traffic-port"
-    matcher             = "500"
+    protocol            = "TCP"
+    port                = "30080"
     timeout             = 5
     unhealthy_threshold = 2
   }
