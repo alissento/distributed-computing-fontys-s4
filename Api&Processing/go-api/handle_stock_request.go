@@ -52,6 +52,7 @@ func Handle_Stock_Request(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to save to S3: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	jobRequest := JobRequest{
 		S3Key:          stock_symbol, //TODO change to s3Key
 		ProcessingType: requestDataPredict.ProcessingType,
@@ -59,6 +60,8 @@ func Handle_Stock_Request(w http.ResponseWriter, r *http.Request) {
 		EndDate:        requestDataPredict.EndDate,
 		StartDate:      requestDataPredict.StartDate,
 		JobID:          jobID,
+		JobStatus:      "pending", // Initial status of the job
+
 	}
 	messageBody, err := json.Marshal(jobRequest) //(TODO what is json.Marshal?)
 	if err != nil {
@@ -66,7 +69,7 @@ func Handle_Stock_Request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = SendMessageToSQS(string(messageBody))
+	err = SendMessageToSQS(string(messageBody), jobID)
 	if err != nil {
 		http.Error(w, "Failed to send to SQS: "+err.Error(), http.StatusInternalServerError)
 		return

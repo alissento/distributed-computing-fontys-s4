@@ -34,7 +34,7 @@ func processJob(key string) {
 	case "Test":
 		predictions := movingAverage(stockData, job.JumpDays)
 		err := savePredictionsToS3(job.JobID, predictions, "results/")
-		updateJobStatusToCompleted(s3Client, jobBucket, job.S3Key)
+		updateJobStatusToCompleted(s3Client, "jobs", job.JobID)
 
 		if err != nil {
 			log.Println("Error saving predictions:", err)
@@ -58,6 +58,7 @@ func processJob(key string) {
 
 		// Save the predictions to S3
 		err = savePredictionsToS3(job.JobID, predictions, "results/")
+		updateJobStatusToCompleted(s3Client, "jobs", job.JobID)
 		if err != nil {
 			log.Println("Error saving predictions:", err)
 			return
