@@ -31,9 +31,16 @@ var (
 	sqsClient           *sqs.Client
 	awsname             string
 	awspassword         string
+	jobBucket           string
 )
 
 // initialize the request
+type JobStatusResponse struct {
+	JobID     string `json:"job_id"`
+	Status    string `json:"status"`
+	JobName   string `json:"job_name"`
+	CreatedAt string `json:"created_at"`
+}
 type JobRequest struct {
 	S3Key          string `json:"s3_key"`
 	ProcessingType string `json:"processing_type"`
@@ -41,6 +48,7 @@ type JobRequest struct {
 	JumpDays       int    `json:"jump_days"`
 	EndDate        string `json:"end_date"`
 	JobID          string `json:"job_id"`
+	JobStatus      string `json:"job_status"` // Initial status of the job
 }
 type RequestData struct {
 	StockSymbol    string `json:"stock_symbol"`
@@ -74,6 +82,7 @@ func main() {
 	StockDataBucketName = os.Getenv("STOCK_DATA_BUCKET")
 	awsname = os.Getenv("AWS_NAME")
 	awspassword = os.Getenv("AWS_PASSWORD")
+	jobBucket = os.Getenv("JOB_BUCKET")
 
 	// Load the AWS SDK configuration with correct LocalStack endpoint for both SQS and S3
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
@@ -115,8 +124,9 @@ func main() {
 	r.HandleFunc("/stocks/{stock_name}", Handle_Stock_Request).Methods("GET")
 
 	// Historical data route (replace "stocknaam" with actual param if needed)
-	r.HandleFunc("/stocks/history/{stock_name}", Handle_Stock_History).Methods("GET")
-
+	r.HandleFunc("/stocks/{stock_name}/history", Handle_Stock_History).Methods("GET")
+	r.HandleFunc("/jobs/{job_id}/status/", getJobStatus).Methods("GET")
+	r.HandleFunc("/jobs", getAllJobs) //return all jobs
 	// // Job status route
 	// r.HandleFunc("/job/jobstatus", Handle_Job_Status).Methods("GET")
 

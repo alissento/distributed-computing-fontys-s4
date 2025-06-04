@@ -19,7 +19,7 @@ var requestDataPredict struct { //this is the request data structure
 
 func Handle_Stock_Request(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("\033[H\033[2J") // Clear the console.
-
+	fmt.Fprintln(w, "Stock data processed successfully")
 	if err := json.NewDecoder(r.Body).Decode(&requestDataPredict); err != nil {
 		http.Error(w, "Failed to decode request body: "+err.Error(), http.StatusBadRequest)
 		return
@@ -71,7 +71,7 @@ func Handle_Stock_Request(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to send to SQS: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	//Send a successful response back
-	fmt.Fprintln(w, "Stock data processed successfully")
+	//Send a successful response back   //TODO job id teruggeven
+	fmt.Fprintln(w, jobID) // Return the job ID as a response
 
 }

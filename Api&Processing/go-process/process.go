@@ -33,8 +33,9 @@ func processJob(key string) {
 	switch job.ProcessingType {
 	case "Test":
 		predictions := movingAverage(stockData, job.JumpDays)
-
 		err := savePredictionsToS3(job.JobID, predictions, "results/")
+		updateJobStatusToCompleted(s3Client, jobBucket, job.S3Key)
+
 		if err != nil {
 			log.Println("Error saving predictions:", err)
 			return

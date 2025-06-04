@@ -40,11 +40,8 @@ func SendMessageToSQS(message string) error {
 		QueueUrl:    aws.String(queueURL),
 		MessageBody: aws.String(message),
 	})
-
-	if err != nil {
-		log.Printf("Message size: %d bytes", len(message))
-		return fmt.Errorf("failed to send message to SQS: %w", err)
-	}
+	// Save job to S3
+	SaveToS3(jobBucket, "job_info.json", message)
 
 	log.Println("Message successfully sent to SQS")
 	return nil
