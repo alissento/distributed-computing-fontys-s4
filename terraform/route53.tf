@@ -14,8 +14,8 @@ resource "aws_route53_record" "main-domain" {
   type    = "A"
 
   alias {
-    name                   = aws_lb.kubernetes-nlb.dns_name
-    zone_id                = aws_lb.kubernetes-nlb.zone_id
+    name                   = aws_lb.kubernetes-alb.dns_name
+    zone_id                = aws_lb.kubernetes-alb.zone_id
     evaluate_target_health = true
   }
 }
@@ -24,8 +24,13 @@ resource "aws_route53_record" "main-domain" {
 resource "aws_route53_record" "api-subdomain" {
   zone_id = aws_route53_zone.hosted-zone.zone_id
   name    = "api.norbertknez.me"
-  type    = "CNAME"
-  records = [ "norbertknez.me:8080" ]
+  type    = "A"
+  
+  alias {
+    name                   = aws_lb.kubernetes-alb.dns_name
+    zone_id                = aws_lb.kubernetes-alb.zone_id
+    evaluate_target_health = true
+  }
 }
 
 resource "aws_acm_certificate" "tls-cert-http" {
