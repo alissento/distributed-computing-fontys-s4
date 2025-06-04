@@ -36,10 +36,13 @@ var (
 
 // initialize the request
 type JobStatusResponse struct {
-	JobID     string `json:"job_id"`
-	Status    string `json:"status"`
-	JobName   string `json:"job_name"`
-	CreatedAt string `json:"created_at"`
+	S3Key          string `json:"s3_key"`
+	ProcessingType string `json:"processing_type"`
+	JumpDays       int    `json:"jump_days"`
+	StartDate      string `json:"start_date"`
+	EndDate        string `json:"end_date"`
+	JobID          string `json:"job_id"`
+	JobStatus      string `json:"job_status"`
 }
 type JobRequest struct {
 	S3Key          string `json:"s3_key"`

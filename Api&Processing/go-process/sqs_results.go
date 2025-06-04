@@ -20,6 +20,7 @@ func sendResultToSQS(result JobResult) error {
 		QueueUrl:    aws.String(queueURL),
 		MessageBody: aws.String(string(resultJSON)),
 	})
+	
 	if err != nil {
 		return fmt.Errorf("failed to send result to SQS: %w", err)
 	}

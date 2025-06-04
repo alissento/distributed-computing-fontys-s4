@@ -14,7 +14,7 @@ import (
 //How to make this dynamic for local and live access!
 // SendMessageToSQS sends a message to the SQS queue
 
-func SendMessageToSQS(message string) error {
+func SendMessageToSQS(message string, jobid string) error {
 	// Load AWS
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion("eu-west-1"),
@@ -41,7 +41,7 @@ func SendMessageToSQS(message string) error {
 		MessageBody: aws.String(message),
 	})
 	// Save job to S3
-	SaveToS3(jobBucket, "job_info.json", message)
+	SaveToS3("jobs", jobid, message)
 
 	log.Println("Message successfully sent to SQS")
 	return nil
