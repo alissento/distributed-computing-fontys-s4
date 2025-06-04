@@ -106,7 +106,7 @@ resource "aws_autoscaling_group" "worker-node-asg" {
   min_size            = 1
   vpc_zone_identifier = [aws_subnet.wkn-a.id, aws_subnet.wkn-b.id, aws_subnet.wkn-c.id]
   target_group_arns = [
-    aws_lb_target_group.worker-node-http-target-group.arn,
+    aws_lb_target_group.worker-node-api-target-group.arn,
     aws_lb_target_group.worker-node-https-target-group.arn
   ]
   health_check_type         = "EC2"

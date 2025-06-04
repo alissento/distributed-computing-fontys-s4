@@ -14,7 +14,7 @@ resource "aws_lb" "kubernetes-nlb" {
 
 resource "aws_lb_listener" "listener-nlb-https" {
   load_balancer_arn = aws_lb.kubernetes-nlb.arn
-  port              = "30443"
+  port              = "443"
   protocol          = "TCP"
 
   default_action {
@@ -23,14 +23,14 @@ resource "aws_lb_listener" "listener-nlb-https" {
   }
 }
 
-resource "aws_lb_listener" "listener-nlb-http" {
+resource "aws_lb_listener" "listener-nlb-api" {
   load_balancer_arn = aws_lb.kubernetes-nlb.arn
-  port              = "433"
+  port              = "8080"
   protocol          = "TCP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.worker-node-http-target-group.arn
+    target_group_arn = aws_lb_target_group.worker-node-api-target-group.arn
   }
 }
 
@@ -54,9 +54,9 @@ resource "aws_lb_target_group" "worker-node-https-target-group" {
   }
 }
 
-resource "aws_lb_target_group" "worker-node-http-target-group" {
-  name     = "worker-node-http-tg"
-  port     = 8080
+resource "aws_lb_target_group" "worker-node-api-target-group" {
+  name     = "worker-node-api-tg"
+  port     = 30080
   protocol = "TCP"
   vpc_id   = aws_vpc.kubernetes-vpc.id
 
@@ -70,7 +70,7 @@ resource "aws_lb_target_group" "worker-node-http-target-group" {
   }
 
   tags = {
-    Name = "worker-node-http-target-group"
+    Name = "worker-node-api-target-group"
   }
 }
 output "load_balancer_dns_name" {
