@@ -112,13 +112,7 @@ resource "aws_lb_target_group" "worker-node-api-target-group" {
   vpc_id   = aws_vpc.kubernetes-vpc.id
 
   health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    interval            = 30
-    protocol            = "TCP"
-    port                = "30080"
-    timeout             = 5
-    unhealthy_threshold = 2
+    enabled             = false
   }
 }
 
