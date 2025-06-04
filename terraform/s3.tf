@@ -7,6 +7,16 @@ resource "aws_s3_bucket" "kubernetes_bucket" {
   }
 }
 
+resource "aws_s3_bucket_server_side_encryption_configuration" "kubernetes_bucket_encryption" {
+  bucket = aws_s3_bucket.kubernetes_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 # Enable versioning
 resource "aws_s3_bucket_versioning" "versioning" {
   bucket = aws_s3_bucket.kubernetes_bucket.id
