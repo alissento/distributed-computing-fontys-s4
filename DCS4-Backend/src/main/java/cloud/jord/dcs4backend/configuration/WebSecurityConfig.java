@@ -3,6 +3,7 @@ package cloud.jord.dcs4backend.configuration;
 import cloud.jord.dcs4backend.configuration.auth.AuthenticationRequestFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -52,7 +53,11 @@ public class WebSecurityConfig {
                                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                                 .anyRequest().authenticated()*//*
                 )*/
-                .authorizeHttpRequests(authorizeRequests -> authorizeRequests.anyRequest().permitAll())
+                .authorizeHttpRequests(authorizeRequests ->
+                        authorizeRequests
+                                .requestMatchers(HttpMethod.GET, "/health").permitAll()
+                                .anyRequest().authenticated()
+                )
                 .exceptionHandling(configure -> configure.authenticationEntryPoint(authenticationEntryPoint))
                 .addFilterBefore(authenticationRequestFilter, UsernamePasswordAuthenticationFilter.class)
                 /*.oauth2Login(oauth2 -> oauth2

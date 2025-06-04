@@ -40,6 +40,12 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
+        // Skip authentication for /health endpoint
+        if (request.getRequestURI().equals("/health")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         // Get token from cookie
         String accessTokenString = extractTokenFromCookies(request);
         
