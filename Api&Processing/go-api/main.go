@@ -124,9 +124,9 @@ func main() {
 	r.HandleFunc("/stocks/{stock_name}", Handle_Stock_Request).Methods("GET")
 
 	// Historical data route (replace "stocknaam" with actual param if needed)
-	r.HandleFunc("/stocks/history/{stock_name}", Handle_Stock_History).Methods("GET")
-	r.HandleFunc("/job/jobstatus/{job_id}", getJobStatus).Methods("GET")
-	r.HandleFunc("/job", getAllJobs) //return all jobs
+	r.HandleFunc("/stocks/{stock_name}/history", Handle_Stock_History).Methods("GET")
+	r.HandleFunc("/jobs/{job_id}/status/", getJobStatus).Methods("GET")
+	r.HandleFunc("/jobs", getAllJobs) //return all jobs
 	// // Job status route
 	// r.HandleFunc("/job/jobstatus", Handle_Job_Status).Methods("GET")
 
