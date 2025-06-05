@@ -27,7 +27,8 @@ func saveToS3(s3Client *s3.Client, bucketName, key, data string) error {
 
 func updateJobStatusToCompleted(s3Client *s3.Client, bucketName, key string) error {
 	log.Printf("This is the bucket name: %s", bucketName)
-	log.Printf("This is the key: %s", key)
+	log.Printf("This is the key: %s", key+".json")
+	key += ".json"
 	getResp, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
 		Bucket: &bucketName,
 		Key:    &key,
