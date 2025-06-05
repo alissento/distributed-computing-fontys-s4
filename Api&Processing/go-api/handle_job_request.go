@@ -67,6 +67,6 @@ func Handle_Job_Request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	SaveJobRequestToS3(jobID, jobRequest)
-	fmt.Fprintln(w, jobID)
+	fmt.Fprint(w, jobID)
 
 }
