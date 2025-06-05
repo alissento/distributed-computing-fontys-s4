@@ -3,23 +3,21 @@ package main
 import (
 	"fmt"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
 func Handle_Stock_History(w http.ResponseWriter, r *http.Request) {
-	// Get the stock symbol from the URL parameter
-	stockSymbol := mux.Vars(r)["stock_name"]
-	// Attempt to download the stock data from S3
-	stockData, err := DownloadStockDataFromS3(stockBucket, stockSymbol)
+	stockSymbol, err := getURLParam(r, "stock_name")
 	if err != nil {
-		// If there's an error, return a 404 (not found) with the error message
-		http.Error(w, fmt.Sprintf("Stock data for %s not found: %v", stockSymbol, err), http.StatusNotFound)
+		http.Error(w, "Failed to download job data: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Return the stock data in the response
+	stockData, err := DownloadS3Object(stockBucket, stockSymbol)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Stock data for %s not found: %v", stockSymbol, err), http.StatusNotFound)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(stockData)) // Return the actual data
+	w.Write([]byte(stockData))
 }

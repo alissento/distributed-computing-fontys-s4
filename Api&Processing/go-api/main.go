@@ -74,7 +74,7 @@ func main() {
 	}
 
 	region = os.Getenv("AWS_REGION")
-	endpoint = os.Getenv("S3_ENDPOINT") // optional, for local dev
+	endpoint = os.Getenv("S3_ENDPOINT")
 	accessKey = os.Getenv("AWS_ACCESS_KEY_ID")
 	secretKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	queueURL = os.Getenv("QUEUE_URL")
@@ -101,10 +101,10 @@ func main() {
 				}, nil
 			}
 			if service == sqs.ServiceID {
-				// Explicitly set the endpoint for SQS
+
 				return aws.Endpoint{
 					URL:               endpoint,
-					HostnameImmutable: true, // Prevents host rewriting
+					HostnameImmutable: true,
 				}, nil
 			}
 			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested for service: %s", service)
@@ -120,18 +120,13 @@ func main() {
 	// Start the HTTP server with the submit handler
 
 	r := mux.NewRouter()
-	// Exact match for /stocks
-	r.HandleFunc("/stocks", Handle_Stock_Symbols).Methods("GET")
 
-	// Match with path parameter
-	r.HandleFunc("/stocks/{stock_name}", Handle_Stock_Request).Methods("GET")
+	r.HandleFunc("/stocks", Handle_Stock_Symbols).Methods("GET")                      //Return all stock symbols
+	r.HandleFunc("/stocks/{stock_name}/history", Handle_Stock_History).Methods("GET") //fetch stock history data
 
-	// Historical data route (replace "stocknaam" with actual param if needed)
-	r.HandleFunc("/stocks/{stock_name}/history", Handle_Stock_History).Methods("GET")
-	r.HandleFunc("/jobs/{job_id}/status/", getJobStatus).Methods("GET")
-	r.HandleFunc("/jobs", getAllJobs) //return all jobs
-	// // Job status route
-	// r.HandleFunc("/job/jobstatus", Handle_Job_Status).Methods("GET")
+	r.HandleFunc("/jobs", Handle_Job_Request).Methods("POST")          //submit job request for stock data processing
+	r.HandleFunc("/jobs/{job_id}/status", getJobStatus).Methods("GET") //return job status by job_id
+	r.HandleFunc("/jobs", getAllJobs).Methods("GET")                   //return all jobs
 
 	log.Println("API server running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
