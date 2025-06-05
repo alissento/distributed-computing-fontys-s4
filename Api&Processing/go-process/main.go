@@ -30,6 +30,7 @@ var (
 	StockDataBucketName string
 	s3Client            *s3.Client
 	sqsClient           *sqs.Client
+	jobBucket           string
 )
 
 type JobRequest struct {
@@ -39,6 +40,7 @@ type JobRequest struct {
 	StartDate      string `json:"start_date"`
 	EndDate        string `json:"end_date"`
 	JobID          string `json:"job_id"`
+	JobStatus      string `json:"job_status"`
 }
 
 type StockData struct {
@@ -64,7 +66,7 @@ func main() {
 	}
 
 	region = os.Getenv("AWS_REGION")
-	endpoint = os.Getenv("S3_ENDPOINT") // optional, for local dev
+	endpoint = os.Getenv("S3_ENDPOINT")
 	accessKey = os.Getenv("AWS_ACCESS_KEY_ID")
 	secretKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	queueURL = os.Getenv("QUEUE_URL")
@@ -74,25 +76,23 @@ func main() {
 	awsname = os.Getenv("AWS_NAME")
 	awspassword = os.Getenv("AWS_PASSWORD")
 	StockDataBucketName = os.Getenv("STOCK_DATA_BUCKET")
+	jobBucket = os.Getenv("JOB_BUCKET")
 
-	// Load the AWS SDK configuration with correct LocalStack endpoint for both SQS and S3
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion(region),
 		config.WithCredentialsProvider(
 			aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(awsname, awspassword, ""))),
 		config.WithEndpointResolver(aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
 			if service == s3.ServiceID {
-				// Explicitly set the endpoint for S3
 				return aws.Endpoint{
 					URL:               endpoint,
-					HostnameImmutable: true, // Prevents host rewriting
+					HostnameImmutable: true,
 				}, nil
 			}
 			if service == sqs.ServiceID {
-				// Explicitly set the endpoint for SQS
 				return aws.Endpoint{
 					URL:               endpoint,
-					HostnameImmutable: true, // Prevents host rewriting
+					HostnameImmutable: true,
 				}, nil
 			}
 			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested for service: %s", service)
@@ -105,7 +105,6 @@ func main() {
 	s3Client = s3.NewFromConfig(cfg)
 	sqsClient = sqs.NewFromConfig(cfg)
 
-	// Create the SQS queue if it doesn't exist
 	for {
 		out, err := sqsClient.ReceiveMessage(context.TODO(), &sqs.ReceiveMessageInput{
 			QueueUrl:            &queueURL,
@@ -117,12 +116,11 @@ func main() {
 			log.Println("SQS error:", err)
 			continue
 		}
-		// Check if there are any messages in the queue
+
 		for _, msg := range out.Messages {
 			log.Println("Processing:", *msg.Body)
 			processJob(*msg.Body)
-			// Delete the message after processing
-			// This is important to prevent the message from being processed again
+			//Todo check Loadbalancing behavior
 			_, err = sqsClient.DeleteMessage(context.TODO(), &sqs.DeleteMessageInput{
 				QueueUrl:      &queueURL,
 				ReceiptHandle: msg.ReceiptHandle,

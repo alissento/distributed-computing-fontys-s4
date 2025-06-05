@@ -7,7 +7,6 @@ import (
 	"strconv"
 )
 
-// Get dates sorted from oldest to newest
 func getSortedDates(data map[string]map[string]string) []string {
 	var dates []string
 	for dateStr := range data {
@@ -17,7 +16,6 @@ func getSortedDates(data map[string]map[string]string) []string {
 	return dates
 }
 
-// Extract closing prices in sorted order
 func getClosingPrices(data map[string]map[string]string, sortedDates []string) []float64 {
 	var prices []float64
 	for _, date := range sortedDates {
@@ -33,26 +31,22 @@ func getClosingPrices(data map[string]map[string]string, sortedDates []string) [
 	return prices
 }
 
-// Compute EMA
 func calculateEMA(prices []float64, period int) []float64 {
 	ema := make([]float64, len(prices))
 	alpha := 2.0 / float64(period+1)
 
-	// Seed first EMA with simple average
 	var sum float64
 	for i := 0; i < period && i < len(prices); i++ {
 		sum += prices[i]
 	}
 	ema[period-1] = sum / float64(period)
 
-	// Compute rest of EMA
 	for i := period; i < len(prices); i++ {
 		ema[i] = (prices[i] * alpha) + (ema[i-1] * (1 - alpha))
 	}
 	return ema
 }
 
-// Detect crossovers and return buy/sell signal dates
 func PredictWithEMACrossover(data StockData, shortPeriod, longPeriod int) []string {
 	sortedDates := getSortedDates(data.TimeSeriesDaily)
 	prices := getClosingPrices(data.TimeSeriesDaily, sortedDates)

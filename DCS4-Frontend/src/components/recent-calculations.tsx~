@@ -1,0 +1,54 @@
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "./ui/table"
+import JobsAPI from "@/api/JobsAPI.ts";
+import {useAuth} from "@/contexts/AuthContext.tsx";
+import {useEffect, useState} from "react";
+
+
+async function getJobs() {
+    return await JobsAPI.getAllJobs();
+}
+
+export function RecentCalculations() {
+    const {isAuthenticated, isLoading} = useAuth();
+    const [jobs, setJobs] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (!isAuthenticated || isLoading) {
+            return;
+        }
+
+        getJobs()
+            .then((data) => setJobs(data))
+    }, [isAuthenticated, isLoading]);
+
+    if (!isAuthenticated || isLoading) {
+        return null;
+    }
+
+    return (
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>ID</TableHead>
+                    {/*<TableHead>Stock</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Duration</TableHead>*/}
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {jobs.map((job) => (
+                    <TableRow key={job.toString()}>
+                       {/* <TableCell className="font-medium">{calc.id}</TableCell>
+                        <TableCell>{calc.stock}</TableCell>
+                        <TableCell>
+                            <Badge variant={calc.status === "completed" ? "default" : "destructive"}>{calc.status}</Badge>
+                        </TableCell>
+                        <TableCell>{new Date(calc.date).toLocaleString()}</TableCell>
+                        <TableCell>{calc.duration}</TableCell>*/}
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    )
+}
