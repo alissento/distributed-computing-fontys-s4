@@ -6,7 +6,6 @@ import (
 	"log"
 )
 
-// process the job met operation
 func processJob(key string) {
 
 	var job JobRequest
@@ -16,60 +15,45 @@ func processJob(key string) {
 		return
 	}
 
-	// Download the stock data
 	data, err := downloadStockData(job.S3Key)
 	if err != nil {
 		log.Println("Error downloading stock data:", err)
 		return
 	}
-	// Add to stockdata struct
 	var stockData StockData
 	err = json.Unmarshal([]byte(data), &stockData)
 	if err != nil {
 		log.Println("Failed to unmarshal stock data:", err)
 		return
 	}
-	// Process the stock data based on the processing type ADD MORE HERE IF U WANT
+
 	switch job.ProcessingType {
 	case "Test":
 		predictions := movingAverage(stockData, job.JumpDays)
-		err := savePredictionsToS3(job.JobID, predictions, "results/")
-		updateJobStatusToCompleted(s3Client, "jobs", job.JobID)
-
-		if err != nil {
-			log.Println("Error saving predictions:", err)
-			return
-		}
-	// case "Sale_Recommendation":
-	// 	predictions := PredictWithEMACrossover(stockData, 1, 2)
-	// 	err := savePredictionsToS3(job.JobID, predictions, "results/")
-	// 	if err != nil {
-	// 		log.Println("Error saving predictions:", err)
-	// 		return
-	// 	}
+		handlePredictionResult(job, predictions, nil)
 
 	case "Predict_Average":
 		predictions, err := PredictAverage(stockData, job)
-
-		if err != nil {
-			log.Println("Error during prediction:", err)
-			return
-		}
-
-		// Save the predictions to S3
-		err = savePredictionsToS3(job.JobID, predictions, "results/")
-		updateJobStatusToCompleted(s3Client, "jobs", job.JobID)
-		if err != nil {
-			log.Println("Error saving predictions:", err)
-			return
-		}
+		handlePredictionResult(job, predictions, err)
 
 	default:
 		log.Println("Unknown processing type:", job.ProcessingType)
 		return
-
 	}
 
+}
+func handlePredictionResult[T map[string]map[string]string](job JobRequest, predictions T, err error) {
+	if err != nil {
+		log.Println("Error during prediction:", err)
+		return
+	}
+	err = savePredictionsToS3(job.JobID, predictions, "results/")
+	if err != nil {
+		log.Println("Error saving predictions:", err)
+		return
+	}
+
+	updateJobStatusToCompleted(s3Client, "jobs", job.JobID)
 }
 
 // func makePredictionSeries(start time.Time, value float64, jumpDays, count int) map[string]map[string]string {

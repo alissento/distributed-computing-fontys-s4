@@ -12,7 +12,6 @@ import (
 )
 
 func saveToS3(s3Client *s3.Client, bucketName, key, data string) error {
-	// Upload data to S3
 	_, err := s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket: &bucketName,
 		Key:    &key,
@@ -25,6 +24,7 @@ func saveToS3(s3Client *s3.Client, bucketName, key, data string) error {
 	log.Printf("Successfully uploaded data to S3: %s/%s", bucketName, key)
 	return nil
 }
+
 func updateJobStatusToCompleted(s3Client *s3.Client, bucketName, key string) error {
 	log.Printf("This is the bucket name: %s", bucketName)
 	log.Printf("This is the key: %s", key)
