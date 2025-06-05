@@ -1,7 +1,10 @@
 package cloud.jord.dcs4backend.domain.request;
 
+import lombok.Getter;
+
 import java.util.Date;
 
+@Getter
 public class StockRequest {
     private String stock_symbol;
     private String processing_type;

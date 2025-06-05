@@ -27,12 +27,6 @@ public class StockController {
     }
 
     @GetMapping("{symbol}")
-    public ResponseEntity<StockResponse> getStock(@RequestBody StockRequest request, String symbol) {
-        StockResponse response = stockService.getStock(request, symbol);
-        return ok(response);
-    }
-
-    @GetMapping("{symbol}/history")
     public ResponseEntity<StockHistoryResponse> getStockHistory(String symbol) {
         StockHistoryResponse response = stockService.getStockHistory(symbol);
         return ok(response);

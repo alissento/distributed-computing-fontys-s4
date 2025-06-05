@@ -46,6 +46,18 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Allow /auth endpoints
+        if (request.getRequestURI().startsWith("/auth")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // Allow post to /users
+        if (request.getMethod().equals("POST") && request.getRequestURI().equals("/users")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         // Get token from cookie
         String accessTokenString = extractTokenFromCookies(request);
         

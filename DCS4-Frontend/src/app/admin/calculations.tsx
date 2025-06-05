@@ -27,35 +27,32 @@ import { Separator } from "../../components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
 import {toast} from "sonner";
 import {cn} from "@/lib/utils.ts";
+import jobsAPI from "@/api/JobsAPI.ts";
 
 const calculationFormSchema = z.object({
-    stockSymbol: z.string().min(1, {
+    stock_symbol: z.string().min(1, {
         message: "Stock symbol is required.",
     }),
-    timeframe: z.string({
+    processing_type: z.string().min(1, {
+        message: "Processing type is required.",
+    }),
+    jump_days: z.number({
         required_error: "Please select a timeframe.",
     }),
-    startDate: z.date({
+    start_date: z.date({
         required_error: "Start date is required.",
     }),
-    endDate: z.date({
+    end_date: z.date({
         required_error: "End date is required.",
-    }),
-    includeMarketSentiment: z.boolean().default(false),
-    includeNewsAnalysis: z.boolean().default(false),
-    includeTechnicalIndicators: z.boolean().default(true),
-    priority: z.string().default("normal"),
+    })
 })
 
 type CalculationFormValues = z.infer<typeof calculationFormSchema>
 
 const defaultValues: Partial<CalculationFormValues> = {
-    stockSymbol: "",
-    timeframe: "1w",
-    includeMarketSentiment: false,
-    includeNewsAnalysis: false,
-    includeTechnicalIndicators: true,
-    priority: "normal",
+    stock_symbol: "",
+    processing_type: "Predict_Average",
+    jump_days: 2
 }
 
 export default function AdminCalculations() {
@@ -69,15 +66,13 @@ export default function AdminCalculations() {
     function onSubmit(data: CalculationFormValues) {
         setIsSubmitting(true)
 
-        // Simulate API call
-        setTimeout(() => {
-            console.log(data)
-            setIsSubmitting(false)
-            toast("Calculation request submitted", {
-                description: `Calculation for ${data.stockSymbol} has been queued.`,
-            })
-            form.reset(defaultValues)
-        }, 2000)
+        jobsAPI.submitStockRequest(data).finally(resetForm)
+
+        setIsSubmitting(false)
+    }
+
+    function resetForm() {
+        form.reset(defaultValues)
     }
 
     return (
@@ -89,8 +84,8 @@ export default function AdminCalculations() {
             <Tabs defaultValue="new" className="space-y-4">
                 <TabsList>
                     <TabsTrigger value="new">New Calculation</TabsTrigger>
-                    <TabsTrigger value="batch">Batch Processing</TabsTrigger>
-                    <TabsTrigger value="scheduled">Scheduled Jobs</TabsTrigger>
+                    {/*<TabsTrigger value="batch">Batch Processing</TabsTrigger>
+                    <TabsTrigger value="scheduled">Scheduled Jobs</TabsTrigger>*/}
                 </TabsList>
 
                 <TabsContent value="new" className="space-y-4">
@@ -107,7 +102,7 @@ export default function AdminCalculations() {
                                     <div className="grid gap-6 md:grid-cols-2">
                                         <FormField
                                             control={form.control}
-                                            name="stockSymbol"
+                                            name="stock_symbol"
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Stock Symbol</FormLabel>
@@ -122,25 +117,14 @@ export default function AdminCalculations() {
 
                                         <FormField
                                             control={form.control}
-                                            name="timeframe"
+                                            name="processing_type"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Prediction Timeframe</FormLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                        <FormControl>
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Select a timeframe" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            <SelectItem value="1d">1 Day</SelectItem>
-                                                            <SelectItem value="1w">1 Week</SelectItem>
-                                                            <SelectItem value="2w">2 Weeks</SelectItem>
-                                                            <SelectItem value="1m">1 Month</SelectItem>
-                                                            <SelectItem value="3m">3 Months</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FormDescription>How far into the future to predict</FormDescription>
+                                                    <FormLabel>Processing Type</FormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Predict_Average" {...field} />
+                                                    </FormControl>
+                                                    <FormDescription>Enter the processing type.</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
@@ -148,24 +132,25 @@ export default function AdminCalculations() {
 
                                         <FormField
                                             control={form.control}
-                                            name="priority"
+                                            name="jump_days"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Processing Priority</FormLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormLabel>Prediction Timeframe</FormLabel>
+                                                    <Select onValueChange={field.onChange} defaultValue={field.value.toString()}>
                                                         <FormControl>
                                                             <SelectTrigger>
-                                                                <SelectValue placeholder="Select priority" />
+                                                                <SelectValue placeholder="Select a timeframe" />
                                                             </SelectTrigger>
                                                         </FormControl>
                                                         <SelectContent>
-                                                            <SelectItem value="low">Low</SelectItem>
-                                                            <SelectItem value="normal">Normal</SelectItem>
-                                                            <SelectItem value="high">High</SelectItem>
-                                                            <SelectItem value="urgent">Urgent</SelectItem>
+                                                            <SelectItem value="1">1 Day</SelectItem>
+                                                            <SelectItem value="2">2 Days</SelectItem>
+                                                            <SelectItem value="3">3 Days</SelectItem>
+                                                            <SelectItem value="4">4 Days</SelectItem>
+                                                            <SelectItem value="5">5 Days</SelectItem>
                                                         </SelectContent>
                                                     </Select>
-                                                    <FormDescription>Set the processing priority for this calculation</FormDescription>
+                                                    <FormDescription>How far into the future to predict</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
@@ -175,7 +160,7 @@ export default function AdminCalculations() {
                                     <div className="grid gap-6 md:grid-cols-2">
                                         <FormField
                                             control={form.control}
-                                            name="startDate"
+                                            name="start_date"
                                             render={({ field }) => (
                                                 <FormItem className="flex flex-col">
                                                     <FormLabel>Start Date</FormLabel>
@@ -206,7 +191,7 @@ export default function AdminCalculations() {
 
                                         <FormField
                                             control={form.control}
-                                            name="endDate"
+                                            name="end_date"
                                             render={({ field }) => (
                                                 <FormItem className="flex flex-col">
                                                     <FormLabel>End Date</FormLabel>
@@ -236,61 +221,6 @@ export default function AdminCalculations() {
                                         />
                                     </div>
 
-                                    <Separator />
-
-                                    <div className="space-y-4">
-                                        <h3 className="text-lg font-medium">Additional Options</h3>
-                                        <div className="grid gap-4 md:grid-cols-3">
-                                            <FormField
-                                                control={form.control}
-                                                name="includeTechnicalIndicators"
-                                                render={({ field }) => (
-                                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                                                        <FormControl>
-                                                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                                                        </FormControl>
-                                                        <div className="space-y-1 leading-none">
-                                                            <FormLabel>Technical Indicators</FormLabel>
-                                                            <FormDescription>Include technical analysis indicators</FormDescription>
-                                                        </div>
-                                                    </FormItem>
-                                                )}
-                                            />
-
-                                            <FormField
-                                                control={form.control}
-                                                name="includeMarketSentiment"
-                                                render={({ field }) => (
-                                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                                                        <FormControl>
-                                                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                                                        </FormControl>
-                                                        <div className="space-y-1 leading-none">
-                                                            <FormLabel>Market Sentiment</FormLabel>
-                                                            <FormDescription>Include market sentiment analysis</FormDescription>
-                                                        </div>
-                                                    </FormItem>
-                                                )}
-                                            />
-
-                                            <FormField
-                                                control={form.control}
-                                                name="includeNewsAnalysis"
-                                                render={({ field }) => (
-                                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                                                        <FormControl>
-                                                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                                                        </FormControl>
-                                                        <div className="space-y-1 leading-none">
-                                                            <FormLabel>News Analysis</FormLabel>
-                                                            <FormDescription>Include news sentiment analysis</FormDescription>
-                                                        </div>
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        </div>
-                                    </div>
-
                                     <Button type="submit" disabled={isSubmitting}>
                                         {isSubmitting ? (
                                             <>
@@ -307,7 +237,7 @@ export default function AdminCalculations() {
                     </Card>
                 </TabsContent>
 
-                <TabsContent value="batch" className="space-y-4">
+                {/*<TabsContent value="batch" className="space-y-4">
                     <Card>
                         <CardHeader>
                             <CardTitle>Batch Processing</CardTitle>
@@ -335,7 +265,7 @@ export default function AdminCalculations() {
                             <p>Scheduled jobs feature coming soon.</p>
                         </CardContent>
                     </Card>
-                </TabsContent>
+                </TabsContent>*/}
             </Tabs>
         </div>
     )
