@@ -45,6 +45,7 @@ func DownloadS3Object(bucketName, key string) (string, error) {
 	log.Printf("Downloaded object from S3: %s/%s", bucketName, key)
 	return string(data), nil
 }
+
 func ListS3Keys(bucketName string) ([]string, error) {
 	resp, err := s3Client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucketName),
