@@ -1,0 +1,207 @@
+---
+- name: Setup Kubernetes master node (Ubuntu 24.04)
+  hosts: localhost  # Target the local machine
+  connection: local # Use local connection, no SSH
+  become: true
+  vars:
+    kube_version_apt: "1.31.7-1.1" # Use this for apt installs
+    kube_version_kubeadm: "v1.31.7" # Use this for kubeadm init
+    kube_user: "ubuntu" # Define the non-root user
+    s3_bucket_name: "kubernetes-bucket-dc-group" # S3 bucket name
+    s3_join_command_folder: "ansible" # Folder in S3 bucket for join command
+    s3_join_command_filename: "join-command.sh" # Filename for join command in S3
+    local_join_command_path: "/tmp/join-command.sh" # Local path for join command
+    
+  tasks:
+
+    - name: Disable swap
+      command: swapoff -a
+      changed_when: false # swapoff doesn't report change well
+
+    - name: Remove swap from /etc/fstab
+      mount:
+        name: swap
+        fstype: swap
+        state: absent
+
+    - name: Load required kernel modules
+      community.general.modprobe:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - overlay
+        - br_netfilter
+
+    - name: Ensure kernel modules load at boot
+      copy:
+        dest: /etc/modules-load.d/k8s.conf
+        content: |
+          overlay
+          br_netfilter
+        mode: '0644'
+
+    - name: Set required sysctl params for Kubernetes
+      ansible.posix.sysctl:
+        name: "{{ item.key }}"
+        value: "{{ item.value }}"
+        sysctl_file: /etc/sysctl.d/k8s.conf
+        reload: yes
+      loop:
+        - { key: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+        - { key: 'net.ipv4.ip_forward', value: '1' }
+        - { key: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
+
+    # --- Apt Setup ---
+    - name: Install prerequisites for K8s apt repo
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+        state: present
+        update_cache: yes
+
+    - name: Create directory for apt keyrings
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Kubernetes GPG key
+      ansible.builtin.get_url:
+        url: https://pkgs.k8s.io/core:/stable:/{{ kube_version_kubeadm.split('.')[0] }}.{{ kube_version_kubeadm.split('.')[1] }}/deb/Release.key # Use major.minor version
+        dest: /tmp/kubernetes-apt-keyring.asc
+        mode: '0644'
+
+    - name: Dearmor Kubernetes GPG key
+      ansible.builtin.command:
+        cmd: gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /tmp/kubernetes-apt-keyring.asc
+        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+    - name: Add Kubernetes APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kube_version_kubeadm.split('.')[0] }}.{{ kube_version_kubeadm.split('.')[1] }}/deb/ /" # Use major.minor version
+        filename: kubernetes
+        state: present
+        update_cache: yes
+
+    # --- Install Containerd ---
+    - name: Install containerd
+      apt:
+        name: containerd
+        state: present
+
+    - name: Create containerd config directory
+      file:
+        path: /etc/containerd
+        state: directory
+        mode: '0755'
+
+    - name: Generate default containerd config and enable SystemdCgroup
+      shell: |
+        containerd config default > /etc/containerd/config.toml
+        sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+      args:
+        creates: /etc/containerd/config.toml # Avoid regenerating if exists
+      notify: restart containerd # Use handler
+
+    - name: Enable and start containerd
+      systemd:
+        name: containerd
+        state: started
+        enabled: yes
+
+    # --- Install Kubernetes Components ---
+    - name: Install Kubernetes components (kubelet, kubeadm, kubectl)
+      apt:
+        name:
+          - kubelet={{ kube_version_apt }}
+          - kubeadm={{ kube_version_apt }}
+          - kubectl={{ kube_version_apt }}
+        state: present
+        update_cache: yes
+
+    - name: Hold Kubernetes packages from being automatically updated
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop:
+        - kubelet
+        - kubeadm
+        - kubectl
+
+    - name: Initialize Kubernetes cluster using kubeadm
+      command: >
+        kubeadm init
+        --pod-network-cidr=10.244.0.0/16
+        --kubernetes-version={{ kube_version_kubeadm }}
+      args:
+        creates: /etc/kubernetes/admin.conf
+      register: kubeadm_init_result
+      changed_when: "\"'kubeadm init' was successfully executed\" in kubeadm_init_result.stdout"
+
+    - name: Display kubeadm init output
+      debug:
+        var: kubeadm_init_result.stdout_lines
+      when: kubeadm_init_result.changed
+
+    - name: Pause for 20 seconds for API server to settle
+      pause:
+        seconds: 20
+      when: kubeadm_init_result.changed # Only pause if init just ran
+
+    # --- Setup User Kubeconfig ---
+    - name: Create .kube directory for the user {{ kube_user }}
+      file:
+        path: "/home/{{ kube_user }}/.kube"
+        state: directory
+        owner: "{{ kube_user }}"
+        group: "{{ kube_user }}"
+        mode: '0750'
+
+    - name: Copy admin.conf to user's kubeconfig directory
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: "/home/{{ kube_user }}/.kube/config"
+        remote_src: yes
+        owner: "{{ kube_user }}"
+        group: "{{ kube_user }}"
+        mode: '0600'
+
+    # --- Install CNI ---
+    - name: Install Calico CNI using admin config
+      command: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf # Use admin config directly as root
+      register: calico_apply
+      changed_when: "'created' in calico_apply.stdout or 'configured' in calico_apply.stdout"
+      failed_when: calico_apply.rc != 0 and 'AlreadyExists' not in calico_apply.stderr # Don't fail if already exists
+
+    # --- Generate Join Command ---
+    - name: Generate and save worker node join command
+      command: kubeadm token create --print-join-command
+      register: join_command_result
+      changed_when: false # This command is read-only
+
+    - name: Save join command to file on master node
+      copy:
+        content: "{{ join_command_result.stdout }}"
+        dest: "/home/{{ kube_user }}/join-command.sh"
+        owner: "{{ kube_user }}"
+        group: "{{ kube_user }}"
+        mode: '0700'
+
+    - name: Upload join command to S3
+      ansible.builtin.command:
+        cmd: aws s3 cp /home/{{ kube_user }}/join-command.sh s3://{{ s3_bucket_name }}/{{ s3_join_command_folder }}/{{ s3_join_command_filename }}
+      register: upload_status
+      become: false
+      changed_when: upload_status.rc == 0
+      failed_when: upload_status.rc != 0
+
+  handlers:
+    - name: restart containerd
+      systemd:
+        name: containerd
+        state: restarted

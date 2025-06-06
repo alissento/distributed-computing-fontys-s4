@@ -13,9 +13,10 @@ data "aws_ami" "ubuntu-2404" {
 }
 
 resource "aws_launch_template" "worker-node-launch-template" {
-  name_prefix   = "worker-node-launch-template"
-  image_id      = data.aws_ami.ubuntu-2404.id
-  instance_type = "t3a.medium"
+  name_prefix            = "worker-node-launch-template"
+  image_id               = data.aws_ami.ubuntu-2404.id
+  instance_type          = "t3a.medium"
+  vpc_security_group_ids = [module.worker-node-sg.security_group_id]
   iam_instance_profile {
     name = aws_iam_instance_profile.worker-node-instance-profile.name
   }
@@ -63,6 +64,16 @@ resource "aws_iam_role_policy_attachment" "worker-node-s3-policy-attachment" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
+resource "aws_iam_role_policy_attachment" "worker-node-ecr-policy-attachment" {
+  role       = aws_iam_role.worker-node-role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "worker-node-rds-policy-attachment" {
+  role       = aws_iam_role.worker-node-role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
+}
+
 resource "aws_iam_policy" "ec2_tag_policy" {
   name        = "ec2-tag-policy"
   description = "Policy to allow EC2 instance tagging"
@@ -89,11 +100,18 @@ resource "aws_iam_role_policy_attachment" "worker-node-ec2-tag-policy-attachment
 }
 
 resource "aws_autoscaling_group" "worker-node-asg" {
+  name                = "worker-node-asg"
   desired_capacity    = 1
   max_size            = 3
   min_size            = 1
   vpc_zone_identifier = [aws_subnet.wkn-a.id, aws_subnet.wkn-b.id, aws_subnet.wkn-c.id]
-
+  target_group_arns = [
+    aws_lb_target_group.worker-node-api-target-group.arn,
+    aws_lb_target_group.worker-node-https-target-group.arn
+  ]
+  health_check_type         = "EC2"
+  health_check_grace_period = 300
+  force_delete              = true
   launch_template {
     id      = aws_launch_template.worker-node-launch-template.id
     version = "$Latest"
@@ -106,15 +124,86 @@ resource "aws_autoscaling_group" "worker-node-asg" {
     propagate_at_launch = true
   }
 
-  depends_on = [ aws_instance.control-plane, aws_s3_object.ansible_worker_node_script ]
+  depends_on = [aws_instance.control-plane, aws_s3_object.worker_node_script, aws_nat_gateway.kubernetes-nat-gateway, aws_launch_template.worker-node-launch-template]
+}
+
+module "worker-node-sg" {
+  source = "terraform-aws-modules/security-group/aws"
+
+  name        = "worker-node-sg"
+  description = "Worker Node Security Group"
+  vpc_id      = aws_vpc.kubernetes-vpc.id
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = "10.0.0.0/20"
+      description = "Allow all traffic from the VPC"
+    },
+    {
+      from_port   = 30080
+      to_port     = 30080
+      protocol    = "tcp"
+      cidr_blocks = "0.0.0.0/0"
+      description = "Allow HTTP traffic from Load Balancer to Traefik"
+    },
+    {
+      from_port   = 30443
+      to_port     = 30443
+      protocol    = "tcp"
+      cidr_blocks = "0.0.0.0/0"
+      description = "Allow HTTPS traffic from Load Balancer to Traefik"
+    }
+  ]
+
+  egress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = "0.0.0.0/0"
+      description = "Allow all traffic to the internet"
+    },
+  ]
+}
+
+module "cluster-plane-sg" {
+  source = "terraform-aws-modules/security-group/aws"
+
+  name        = "cluster-plane-sg"
+  description = "Control Plane Security Group"
+  vpc_id      = aws_vpc.kubernetes-vpc.id
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = "10.0.0.0/20"
+      description = "Allow all traffic from the VPC"
+    },
+  ]
+
+  egress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = "0.0.0.0/0"
+      description = "Allow all traffic to the internet"
+    },
+  ]
 }
 
 resource "aws_instance" "control-plane" {
-  ami                  = data.aws_ami.ubuntu-2404.id
-  instance_type        = "t3a.medium"
-  subnet_id            = aws_subnet.cp-a.id
-  user_data            = local.node-user-data
-  iam_instance_profile = aws_iam_instance_profile.worker-node-instance-profile.name
+  ami                    = data.aws_ami.ubuntu-2404.id
+  instance_type          = "t3a.medium"
+  subnet_id              = aws_subnet.cp-a.id
+  user_data              = local.node-user-data
+  iam_instance_profile   = aws_iam_instance_profile.worker-node-instance-profile.name
+  vpc_security_group_ids = [module.cluster-plane-sg.security_group_id]
   ebs_block_device {
     device_name = "/dev/sda1"
     volume_size = 30
@@ -123,5 +212,11 @@ resource "aws_instance" "control-plane" {
     NodeType = "control-plane"
   }
 
-  depends_on = [ aws_s3_object.ansible_master_node_script ]
+  lifecycle {
+    ignore_changes = [
+      tags["Name"],
+    ]
+  }
+
+  depends_on = [aws_s3_object.master_node_script, aws_nat_gateway.kubernetes-nat-gateway]
 }

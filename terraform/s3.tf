@@ -7,6 +7,16 @@ resource "aws_s3_bucket" "kubernetes_bucket" {
   }
 }
 
+resource "aws_s3_bucket_server_side_encryption_configuration" "kubernetes_bucket_encryption" {
+  bucket = aws_s3_bucket.kubernetes_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 # Enable versioning
 resource "aws_s3_bucket_versioning" "versioning" {
   bucket = aws_s3_bucket.kubernetes_bucket.id
@@ -16,14 +26,28 @@ resource "aws_s3_bucket_versioning" "versioning" {
   }
 }
 
-resource "aws_s3_object" "ansible_worker_node_script" {
+# Uncomment when playbooks are ready
+# resource "aws_s3_object" "ansible_worker_node_script" {
+#   bucket = aws_s3_bucket.kubernetes_bucket.id
+#   key    = "ansible/masternode-playbook.yml"
+#   source = "ansible/masternode-playbook.yml"
+# }
+
+# resource "aws_s3_object" "ansible_master_node_script" {
+#   bucket = aws_s3_bucket.kubernetes_bucket.id
+#   key    = "ansible/workernode-playbook.yml"
+#   source = "ansible/workernode-playbook.yml"
+# }
+
+# Delete this after the playbooks are ready
+resource "aws_s3_object" "worker_node_script" {
   bucket = aws_s3_bucket.kubernetes_bucket.id
-  key    = "ansible/k8_worker.yml"
-  source = "ansible/k8_worker.yml"
+  key    = "ansible/masternode.sh"
+  source = "ansible/masternode.sh"
 }
 
-resource "aws_s3_object" "ansible_master_node_script" {
+resource "aws_s3_object" "master_node_script" {
   bucket = aws_s3_bucket.kubernetes_bucket.id
-  key    = "ansible/k8_master.yml"
-  source = "ansible/k8_master.yml"
+  key    = "ansible/workernode.sh"
+  source = "ansible/workernode.sh"
 }

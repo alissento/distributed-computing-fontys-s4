@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-api-deployment
+  labels:
+    app: go-api
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: go-api 
+  template:
+    metadata:
+      labels:
+        app: go-api
+    spec:
+      imagePullSecrets:
+      - name: ecr-registry-secret
+      containers:
+      - name: go-api
+        image: 657026912035.dkr.ecr.eu-west-1.amazonaws.com/dc-container-repo:go-api-latest
+        ports:
+        - containerPort: 1234 # change this to the port of go-api dockerfile expose

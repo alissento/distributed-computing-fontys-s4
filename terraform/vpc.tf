@@ -47,6 +47,26 @@ resource "aws_subnet" "public-a" {
   }
 }
 
+resource "aws_subnet" "public-b" {
+  vpc_id                  = aws_vpc.kubernetes-vpc.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = "eu-west-1b"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "public-b"
+  }
+}
+resource "aws_subnet" "public-c" {
+  vpc_id                  = aws_vpc.kubernetes-vpc.id
+  cidr_block              = "10.0.3.0/24"
+  availability_zone       = "eu-west-1c"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "public-c"
+  }
+}
 // Control plane subnets
 resource "aws_subnet" "cp-a" {
   vpc_id            = aws_vpc.kubernetes-vpc.id
@@ -154,8 +174,18 @@ resource "aws_route_table" "internet-routetable" {
 }
 
 
-resource "aws_route_table_association" "public-subnet-association" {
+resource "aws_route_table_association" "public-subnet-association_a" {
   subnet_id      = aws_subnet.public-a.id
+  route_table_id = aws_route_table.internet-routetable.id
+}
+
+resource "aws_route_table_association" "public-subnet-association_b" {
+  subnet_id      = aws_subnet.public-b.id
+  route_table_id = aws_route_table.internet-routetable.id
+}
+
+resource "aws_route_table_association" "public-subnet-association_c" {
+  subnet_id      = aws_subnet.public-c.id
   route_table_id = aws_route_table.internet-routetable.id
 }
 
