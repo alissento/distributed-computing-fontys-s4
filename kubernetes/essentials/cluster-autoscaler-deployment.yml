@@ -142,7 +142,7 @@ spec:
           type: RuntimeDefault
       serviceAccountName: cluster-autoscaler
       containers:
-        - image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.28.2
+        - image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.31.1
           name: cluster-autoscaler
           resources:
             limits:
@@ -161,10 +161,6 @@ spec:
             - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/kubernetes-cluster
             - --balance-similar-node-groups
             - --skip-nodes-with-system-pods=false
-          volumeMounts:
-            - name: ssl-certs
-              mountPath: /etc/ssl/certs/ca-certificates.crt
-              readOnly: true
           imagePullPolicy: "Always"
           securityContext:
             allowPrivilegeEscalation: false
@@ -172,9 +168,5 @@ spec:
               drop:
                 - ALL
             readOnlyRootFilesystem: true
-      volumes:
-        - name: ssl-certs
-          hostPath:
-            path: "/etc/ssl/certs/ca-bundle.crt"
       nodeSelector:
         kubernetes.io/os: linux

@@ -176,7 +176,7 @@ resource "aws_autoscaling_group" "worker-node-asg" {
   }
 
   tag {
-    key                 = "k8s.io/cluster-autoscaler/kubernetes-cluster"
+    key                 = "k8s.io/cluster-autoscaler/kubernetes"
     value               = "owned"
     propagate_at_launch = false
   }
