@@ -65,18 +65,18 @@ resource "aws_lb_listener_rule" "api_rule" {
   }
 }
 
-# HTTP redirect
-resource "aws_lb_listener" "listener-alb-http" {
-  load_balancer_arn = aws_lb.kubernetes-alb.arn
-  port              = "80"
-  protocol          = "HTTP"
+resource "aws_lb_listener_rule" "monitoring_rule" {
+  listener_arn = aws_lb_listener.listener-alb-https.arn
+  priority     = 101
 
-  default_action {
-    type = "redirect"
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.worker-node-monitoring-target-group.arn
+  }
+
+  condition {
+    host_header {
+      values = ["monitoring.norbertknez.me"]
     }
   }
 }
@@ -111,6 +111,25 @@ resource "aws_lb_target_group" "worker-node-api-target-group" {
     interval            = 30
     matcher             = "200"
     path                = "/health"
+    port                = "traffic-port"
+    protocol            = "HTTPS"
+    timeout             = 5
+    unhealthy_threshold = 2
+  }
+}
+
+resource "aws_lb_target_group" "worker-node-monitoring-target-group" {
+  name     = "worker-node-monitoring-tg"
+  port     = 30555
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.kubernetes-vpc.id
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher             = "200"
+    path                = "/"
     port                = "traffic-port"
     protocol            = "HTTPS"
     timeout             = 5

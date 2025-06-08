@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: go-process-deployment
+  namespace: process-stack
   labels:
     app: go-process
 spec:

@@ -40,13 +40,6 @@ if [ "$NODE_TYPE" == "control-plane" ]; then
     /tmp/masternode.sh
     echo "Master node setup completed"
 
-    kubectl create secret docker-registry ecr-registry-secret \
-    --docker-server="${ECR_REGISTRY}" \
-    --docker-username=AWS \
-    --docker-password="${ECR_PASSWORD}" \
-    --docker-email=no-reply@example.com
-    echo "Docker registry secret created"
-
 elif [ "$NODE_TYPE" == "worker-node" ]; then
     echo "Worker node detected, downloading shell script to install worker node software"
 
