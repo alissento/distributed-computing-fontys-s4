@@ -84,7 +84,7 @@ resource "aws_lb_listener_rule" "monitoring_rule" {
 resource "aws_lb_target_group" "worker-node-https-target-group" {
   name     = "worker-node-https-tg"
   port     = 30443
-  protocol = "HTTPS"
+  protocol = "HTTP"
   vpc_id   = aws_vpc.kubernetes-vpc.id
 
   health_check {
@@ -93,7 +93,7 @@ resource "aws_lb_target_group" "worker-node-https-target-group" {
     interval            = 30
     path                = "/"
     port                = "traffic-port"
-    protocol            = "HTTPS"
+    protocol            = "HTTP"
     timeout             = 5
     unhealthy_threshold = 2
   }
