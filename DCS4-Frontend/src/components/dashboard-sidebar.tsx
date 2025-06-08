@@ -85,7 +85,7 @@ export function DashboardSidebar() {
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
-                            <SidebarMenuItem>
+                           {/* <SidebarMenuItem>
                                 <SidebarMenuButton asChild isActive={isActive("/predictions")}>
                                     <Link to="/predictions">
                                         <LineChart className="h-4 w-4" />
@@ -108,7 +108,7 @@ export function DashboardSidebar() {
                                         <span>Analytics</span>
                                     </Link>
                                 </SidebarMenuButton>
-                            </SidebarMenuItem>
+                            </SidebarMenuItem>*/}
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
@@ -173,12 +173,12 @@ export function DashboardSidebar() {
                                 </div>
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
+                           {/* <DropdownMenuItem asChild>
                                 <Link to="/profile">
                                     <Settings className="mr-2 h-4 w-4" />
                                     <span>Settings</span>
                                 </Link>
-                            </DropdownMenuItem>
+                            </DropdownMenuItem>*/}
                             <DropdownMenuItem onClick={handleLogout}>
                                 <LogOut className="mr-2 h-4 w-4" />
                                 <span>Log out</span>

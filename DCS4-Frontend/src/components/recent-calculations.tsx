@@ -4,6 +4,7 @@ import {useAuth} from "@/contexts/AuthContext.tsx";
 import {useEffect, useState} from "react";
 import Spinner from "./ui/spinner";
 import {Badge} from "./ui/badge";
+import {DownloadIcon} from "lucide-react";
 
 type JobStatus = {
     s3_key: string;
@@ -64,6 +65,7 @@ export function RecentCalculations() {
                     <TableHead>Status</TableHead>
                     <TableHead>Processing Type</TableHead>
                     <TableHead>Date Range</TableHead>
+                    <TableHead>Download</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -98,6 +100,15 @@ export function RecentCalculations() {
                                 <Spinner />
                             ) : (
                                 `${jobStatuses[jobId]?.start_date} - ${jobStatuses[jobId]?.end_date}`
+                            )}
+                        </TableCell>
+                        <TableCell className="flex items-center justify-center">
+                            {loadingStatuses[jobId] ? (
+                                <Spinner />
+                            ) : (
+                                <a href={jobStatuses[jobId]?.job_id} target="_blank" rel="noopener noreferrer">
+                                    <DownloadIcon className="m-auto" />
+                                </a>
                             )}
                         </TableCell>
                     </TableRow>

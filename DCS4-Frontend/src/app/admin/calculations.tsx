@@ -68,11 +68,11 @@ export default function AdminCalculations() {
 
         jobsAPI.submitStockRequest(data).finally(resetForm)
 
-        setIsSubmitting(false)
     }
 
     function resetForm() {
         form.reset(defaultValues)
+        setIsSubmitting(false)
     }
 
     return (
