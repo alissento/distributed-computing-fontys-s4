@@ -102,7 +102,7 @@ resource "aws_lb_target_group" "worker-node-https-target-group" {
 resource "aws_lb_target_group" "worker-node-api-target-group" {
   name     = "worker-node-api-tg"
   port     = 30080
-  protocol = "HTTPS"
+  protocol = "HTTP"
   vpc_id   = aws_vpc.kubernetes-vpc.id
 
   health_check {
@@ -112,7 +112,7 @@ resource "aws_lb_target_group" "worker-node-api-target-group" {
     matcher             = "200"
     path                = "/health"
     port                = "traffic-port"
-    protocol            = "HTTPS"
+    protocol            = "HTTP"
     timeout             = 5
     unhealthy_threshold = 2
   }
