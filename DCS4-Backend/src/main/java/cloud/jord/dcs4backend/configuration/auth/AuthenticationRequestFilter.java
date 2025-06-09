@@ -117,13 +117,26 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
         // Fetch user roles and permissions from the database
         User user = userService.getUser(accessToken.getUserId());
 
-        // Convert roles and permissions to SimpleGrantedAuthority objects
+        // Bit hacky but does the job
         Set<GrantedAuthority> authorities = new HashSet<>();
-        authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + user.getRole().name()));
+        switch (user.getRole()) {
+            case ADMIN:
+                authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + "ADMIN"));
+                authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + "USER"));
+                authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + "ANALYST"));
+                break;
+            case ANALYST:
+                authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + "ANALYST"));
+                authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + "USER"));
+                break;
+            case USER:
+                authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + "USER"));
+                break;
+        }
 
         // Create UserDetails with the authorities
         UserDetails userDetails = new CustomUserDetails(
-            accessToken.getUserId(), 
+            accessToken.getUserId(),
             accessToken.getName() != null ? accessToken.getName() : user.getName(),
             accessToken.getEmail(),
             authorities
