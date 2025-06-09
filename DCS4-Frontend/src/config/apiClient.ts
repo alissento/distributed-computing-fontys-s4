@@ -2,7 +2,7 @@ import axios, {AxiosInstance, RawAxiosRequestHeaders} from "axios";
 import env from '@/config/env';
 
 const apiClient: AxiosInstance = axios.create({
-    baseURL: process.env.NODE_ENV === 'production' ? 'https://api.norbertknez.me' : env.API_URL,
+    baseURL: 'https://api.norbertknez.me',
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
