@@ -22,7 +22,12 @@ public class UserService implements UserServiceUseCase {
             throw new IllegalArgumentException("Email already exists");
         }
 
-        Role role = request.getRole() != null ? request.getRole() : Role.USER;
+        Role role;
+        if (userRepository.count() == 0) {
+            role = Role.ADMIN;
+        } else {
+            role = Role.USER;
+        }
 
         String hashedPassword = PasswordManager.hashPassword(request.getPassword());
         User user = new User(request.getName(), request.getEmail(), hashedPassword, role);
