@@ -4,6 +4,7 @@ metadata:
   name: frontend-deployment
   labels:
     app: frontend
+  namespace: webapp
 spec:
   replicas: 5
   selector:

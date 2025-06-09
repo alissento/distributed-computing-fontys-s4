@@ -35,7 +35,7 @@ resource "aws_route53_record" "api-subdomain" {
 
 resource "aws_acm_certificate" "tls-cert-http" {
   domain_name       = "norbertknez.me"
-  subject_alternative_names = ["api.norbertknez.me"]
+  subject_alternative_names = ["api.norbertknez.me", "monitoring.norbertknez.me"]
   validation_method = "DNS"
 
   tags = {

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend-deployment
+  namespace: webapp
   labels:
     app: backend
 spec:
@@ -58,9 +59,9 @@ spec:
           value: "8080"
         - name: SPRING_PROFILE
           value: "prod"
-        - name: GO_API_BASE_URL
-          value: "http://go-api:1234"
-        - name: GO_API_TOKEN
+        - name: PROCESSING_API_BASE_URL
+          value: "http://go-api-service:1234"
+        - name: PROCESSING_API_TOKEN
           valueFrom:
             secretKeyRef:
               name: go-api-secret
