@@ -25,5 +25,3 @@ spec:
         env:
         - name: VITE_API_URL
           value: "https://api.norbertknez.me"
-        - name: NODE_ENV
-          value: "production"

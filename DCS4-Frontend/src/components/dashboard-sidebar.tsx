@@ -1,16 +1,5 @@
-import { Link, useLocation, useNavigate } from "react-router-dom"
-import {
-    BarChart3,
-    Calculator,
-    ChevronDown,
-    Clock,
-    Home,
-    LineChart,
-    LogOut,
-    Settings,
-    TrendingUp,
-    Users,
-} from "lucide-react"
+import {Link, useLocation, useNavigate} from "react-router-dom"
+import {Calculator, ChevronDown, Home, LogOut, Settings, TrendingUp, Users,} from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -24,8 +13,8 @@ import {
     SidebarMenuItem,
     SidebarRail,
 } from "./ui/sidebar"
-import { Avatar, AvatarFallback } from "./ui/avatar"
-import { Button } from "./ui/button"
+import {Avatar, AvatarFallback} from "./ui/avatar"
+import {Button} from "./ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -34,8 +23,10 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
-import { useAuthStore } from "@/stores/AuthStore"
-import { toast } from "sonner"
+import {useAuthStore} from "@/stores/AuthStore"
+import {toast} from "sonner"
+import {useAuth} from "@/contexts/AuthContext.tsx";
+import {Role} from "@/types/user.ts";
 
 export function DashboardSidebar() {
     const location = useLocation()
@@ -43,6 +34,8 @@ export function DashboardSidebar() {
 
     const user = useAuthStore(state => state.user)
     const logout = useAuthStore(state => state.logout)
+
+    const {hasRole} = useAuth();
 
     const handleLogout = async () => {
         try {
@@ -113,22 +106,25 @@ export function DashboardSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                <SidebarGroup>
-                    <SidebarGroupLabel>Analyst</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isActive("/admin/calculations")}>
-                                    <Link to="/admin/calculations">
-                                        <Calculator className="h-4 w-4" />
-                                        <span>Calculations</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
+                {hasRole(Role.ANALYST) && (
+                    <SidebarGroup>
+                        <SidebarGroupLabel>Analyst</SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild isActive={isActive("/admin/calculations")}>
+                                        <Link to="/admin/calculations">
+                                            <Calculator className="h-4 w-4" />
+                                            <span>Calculations</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                )}
 
+                {hasRole(Role.ADMIN) && (
                 <SidebarGroup>
                     <SidebarGroupLabel>Admin</SidebarGroupLabel>
                     <SidebarGroupContent>
@@ -152,6 +148,7 @@ export function DashboardSidebar() {
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
+                )}
             </SidebarContent>
             <SidebarFooter>
                 <div className="px-3 py-2">

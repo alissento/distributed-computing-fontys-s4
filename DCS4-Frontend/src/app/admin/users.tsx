@@ -1,4 +1,4 @@
-import { useState } from "react"
+import {useEffect, useState} from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,6 +15,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import UsersAPI from "@/api/UsersAPI.ts";
 
 type UserRole = "USER" | "ANALYST" | "ADMIN"
 
@@ -25,55 +26,18 @@ interface User {
     role: UserRole
 }
 
-// Mock data - replace with actual API calls
-const initialUsers: User[] = [
-    {
-        id: "1",
-        name: "John Doe",
-        email: "john.doe@company.com",
-        role: "ADMIN"
-    },
-    {
-        id: "2",
-        name: "Jane Smith",
-        email: "jane.smith@company.com",
-        role: "ANALYST"
-    },
-    {
-        id: "3",
-        name: "Mike Johnson",
-        email: "mike.johnson@company.com",
-        role: "USER"
-    },
-    {
-        id: "4",
-        name: "Sarah Wilson",
-        email: "sarah.wilson@company.com",
-        role: "ANALYST"
-    },
-    {
-        id: "5",
-        name: "David Brown",
-        email: "david.brown@company.com",
-        role: "USER"
-    },
-    {
-        id: "6",
-        name: "Lisa Davis",
-        email: "lisa.davis@company.com",
-        role: "USER"
-    },
-]
-
 export default function AdminUsers() {
-    const [users, setUsers] = useState<User[]>(initialUsers)
+    const [users, setUsers] = useState<User[]>([])
     const [searchTerm, setSearchTerm] = useState("")
     const [roleFilter, setRoleFilter] = useState<UserRole | "ALL">("ALL")
 
+    useEffect(() => {
+        UsersAPI.getAllUsers().then(setUsers)
+    }, []);
+
     const handleRoleChange = (userId: string, newRole: UserRole) => {
         setUsers((prevUsers) => prevUsers.map((user) => (user.id === userId ? { ...user, role: newRole } : user)))
-        // Here you would typically make an API call to update the user role
-        console.log(`Updated user ${userId} role to ${newRole}`)
+        UsersAPI.updateUserRole(userId, newRole)
     }
 
     const getRoleBadgeVariant = (role: UserRole) => {

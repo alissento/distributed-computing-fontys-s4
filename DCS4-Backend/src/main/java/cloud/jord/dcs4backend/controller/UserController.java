@@ -4,15 +4,17 @@ import cloud.jord.dcs4backend.business.TokenServiceUseCase;
 import cloud.jord.dcs4backend.business.UserServiceUseCase;
 import cloud.jord.dcs4backend.configuration.auth.token.AccessTokenDecoderUseCase;
 import cloud.jord.dcs4backend.configuration.auth.token.AccessTokenUseCase;
+import cloud.jord.dcs4backend.domain.User;
 import cloud.jord.dcs4backend.domain.request.UserCreateRequest;
 import cloud.jord.dcs4backend.domain.response.TokenResponse;
 import cloud.jord.dcs4backend.domain.response.UserInfoResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -44,5 +46,20 @@ public class UserController {
         tokenResponse.setUser(userInfo);
         
         return ResponseEntity.ok(tokenResponse);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping()
+    public ResponseEntity<List<UserInfoResponse>> getAllUsers() {
+        List<UserInfoResponse> response = userService.getAllUsers();
+        return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PatchMapping("{id}")
+    public ResponseEntity<UserInfoResponse> updateRole(@PathVariable String id, @RequestBody Map<String,String> requestBody) {
+        String role = requestBody.get("role");
+        UserInfoResponse response = userService.updateRole(id, role);
+        return ResponseEntity.ok(response);
     }
 }
