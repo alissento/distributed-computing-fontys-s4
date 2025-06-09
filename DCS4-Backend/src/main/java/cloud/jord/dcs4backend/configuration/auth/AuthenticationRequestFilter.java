@@ -114,7 +114,7 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
     }
 
     private void setupSpringSecurityContext(AccessTokenUseCase accessToken) {
-        // Fetch user roles and permissions from the database
+        // Fetch user roles and permissions from the database 
         User user = userService.getUser(accessToken.getUserId());
 
         // Bit hacky but does the job
