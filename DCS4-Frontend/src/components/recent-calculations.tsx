@@ -29,7 +29,12 @@ export function RecentCalculations() {
 
         JobsAPI.getAllJobs()
             .then((data) => {
+                if (!Array.isArray(data)) {
+                    console.error("Unexpected response format, expected an array.");
+                    return;
+                }
                 setJobs(data);
+
                 // Initialize loading states for all jobs
                 const initialLoadingStates = data.reduce((acc, jobId) => {
                     acc[jobId] = true;
@@ -49,6 +54,9 @@ export function RecentCalculations() {
                             setLoadingStatuses(prev => ({...prev, [jobId]: false}));
                         });
                 });
+            })
+            .catch(error => {
+                console.error("Error fetching jobs:", error);
             });
     }, [isAuthenticated, isLoading]);
 
@@ -69,7 +77,7 @@ export function RecentCalculations() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {jobs.map((jobId) => (
+                {jobs ? jobs.map((jobId) => (
                     <TableRow key={jobId}>
                         <TableCell className="font-medium">{jobId}</TableCell>
                         <TableCell>
@@ -112,7 +120,7 @@ export function RecentCalculations() {
                             )}
                         </TableCell>
                     </TableRow>
-                ))}
+                )) : null}
             </TableBody>
         </Table>
     )
