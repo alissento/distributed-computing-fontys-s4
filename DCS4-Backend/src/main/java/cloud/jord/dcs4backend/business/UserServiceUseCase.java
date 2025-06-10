@@ -12,4 +12,5 @@ public interface UserServiceUseCase {
     User getUser(Long id);
     List<UserInfoResponse> getAllUsers();
     UserInfoResponse updateRole(String id, String role);
+    User save(User user);
 }

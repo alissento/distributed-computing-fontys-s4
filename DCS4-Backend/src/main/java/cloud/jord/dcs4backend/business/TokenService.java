@@ -26,17 +26,9 @@ public class TokenService implements TokenServiceUseCase {
 
     @Override
     public String authenticate(String email, String password) {
-        User user;
-
-        try {
-            user = userService.getUser(email);
-        } catch (ResourceNotFoundException e) {
-            throw new RuntimeException("Invalid username or password");
-        }
-
-        if (PasswordManager.passwordIsInvalid(password, user.getPasswordHash())) {
-            throw new RuntimeException("Invalid username or password");
-        }
+        validateCredentials(email, password);
+        
+        User user = userService.getUser(email);
 
         // Generate AccessToken
         AccessTokenUseCase token = new AccessToken(
@@ -48,6 +40,37 @@ public class TokenService implements TokenServiceUseCase {
 
         // Encode the token
         return TokenEncoder.encode(token);
+    }
+    
+    @Override
+    public String authenticateWithTotpVerified(String email) {
+        User user = userService.getUser(email);
+
+        // Generate AccessToken (TOTP already verified)
+        AccessTokenUseCase token = new AccessToken(
+            email,
+            user.getId(),
+            user.getName(),
+            user.getRole().name()
+        );
+
+        // Encode the token
+        return TokenEncoder.encode(token);
+    }
+    
+    @Override
+    public void validateCredentials(String email, String password) {
+        User user;
+
+        try {
+            user = userService.getUser(email);
+        } catch (ResourceNotFoundException e) {
+            throw new RuntimeException("Invalid username or password");
+        }
+
+        if (PasswordManager.passwordIsInvalid(password, user.getPasswordHash())) {
+            throw new RuntimeException("Invalid username or password");
+        }
     }
     
     @Override

@@ -2,8 +2,11 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { useAuthStore } from '@/stores/AuthStore';
 import { Role, User } from '@/types/user';
 
+type AuthState = 'unauthenticated' | 'pending_totp' | 'pending_totp_setup' | 'authenticated';
+
 type AuthContextType = {
   isAuthenticated: boolean;
+  authState: AuthState;
   isLoading: boolean;
   user: User | null;
   hasRole: (role: Role) => boolean;
@@ -13,12 +16,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { 
-    isAuthenticated, 
+    authState,
     isLoading: storeLoading, 
     checkAuth, 
     user,
     hasRole
   } = useAuthStore();
+  
+  // Compute isAuthenticated from authState
+  const isAuthenticated = authState === 'authenticated';
   
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
@@ -44,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider value={{
       isAuthenticated,
+      authState,
       isLoading: storeLoading || isCheckingAuth,
       user,
       hasRole

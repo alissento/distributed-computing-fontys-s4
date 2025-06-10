@@ -58,4 +58,9 @@ public class UserService implements UserServiceUseCase {
         userRepository.save(user);
         return new UserInfoResponse(user.getId().toString(), user.getEmail(), user.getName(), user.getRole().name());
     }
+
+    @Override
+    public User save(User user) {
+        return userRepository.save(user);
+    }
 }

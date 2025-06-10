@@ -122,20 +122,28 @@ export default function AdminCalculations() {
                                                 <FormItem>
                                                     <FormLabel>Processing Type</FormLabel>
                                                     <FormControl>
-                                                        <Input placeholder="Predict_Average" {...field} />
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value.toString()}>
+                                                            <FormControl>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Select a processing type" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                <SelectItem value="Predict_Average">Predict Average</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
                                                     </FormControl>
                                                     <FormDescription>Enter the processing type.</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
-
                                         <FormField
                                             control={form.control}
                                             name="jump_days"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Prediction Timeframe</FormLabel>
+                                                    <FormLabel>Prediction Jump days</FormLabel>
                                                     <Select onValueChange={field.onChange} defaultValue={field.value.toString()}>
                                                         <FormControl>
                                                             <SelectTrigger>
@@ -150,7 +158,7 @@ export default function AdminCalculations() {
                                                             <SelectItem value="5">5 Days</SelectItem>
                                                         </SelectContent>
                                                     </Select>
-                                                    <FormDescription>How far into the future to predict</FormDescription>
+                                                    <FormDescription>Select the number of days to jump.</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
@@ -183,7 +191,7 @@ export default function AdminCalculations() {
                                                             <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
                                                         </PopoverContent>
                                                     </Popover>
-                                                    <FormDescription>Historical data start date</FormDescription>
+                                                    <FormDescription>Future predicted data start date</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
@@ -214,7 +222,7 @@ export default function AdminCalculations() {
                                                             <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
                                                         </PopoverContent>
                                                     </Popover>
-                                                    <FormDescription>Historical data end date</FormDescription>
+                                                    <FormDescription>Future predicted data end date</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}

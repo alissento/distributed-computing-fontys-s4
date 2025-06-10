@@ -17,11 +17,16 @@ public class User {
     private String email;
     private String passwordHash;
     private Role role;
+    
+    // TOTP 2FA fields
+    private String totpSecret;
+    private boolean totpEnabled = false;
 
     public User(String name, String email, String hashedPassword, Role role) {
         this.name = name;
         this.email = email;
         this.passwordHash = hashedPassword;
         this.role = role;
+        this.totpEnabled = false;
     }
 }

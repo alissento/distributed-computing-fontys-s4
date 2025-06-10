@@ -46,13 +46,13 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Allow /auth endpoints
+        // Allow /auth endpoints (including TOTP endpoints)
         if (request.getRequestURI().startsWith("/auth")) {
             chain.doFilter(request, response);
             return;
         }
 
-        // Allow post to /users
+        // Allow post to /users (registration)
         if (request.getMethod().equals("POST") && request.getRequestURI().equals("/users")) {
             chain.doFilter(request, response);
             return;
@@ -74,6 +74,16 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
 
         try {
             AccessTokenUseCase accessToken = accessTokenDecoder.decode(accessTokenString);
+            
+            // SECURITY CHECK: Verify TOTP is enabled for all protected endpoints
+            User user = userService.getUser(accessToken.getUserId());
+            if (!user.isTotpEnabled()) {
+                // User has not completed TOTP setup - deny access to protected resources
+                logger.warn("Access denied to " + request.getRequestURI() + " - TOTP setup not completed for user " + user.getEmail());
+                sendAuthenticationError(response);
+                return;
+            }
+            
             setupSpringSecurityContext(accessToken);
             chain.doFilter(request, response);
         } catch (InvalidAccessTokenException e) {
