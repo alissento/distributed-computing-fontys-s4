@@ -15,7 +15,7 @@ on:
       - "DCS4-Backend/**"
       - "DCS4-Frontend/**"
       - "Api&Processing/**"
-
+      - "kubernetes/monitoring/**" 
 env:
   AWS_REGION: "eu-west-1"
   ECR_REPOSITORY: "dc-container-repo" 
