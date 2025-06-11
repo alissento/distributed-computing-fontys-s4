@@ -48,6 +48,11 @@ grafana:
     existingSecret: grafana-admin-credentials
     userKey: admin-user
     passwordKey: admin-password
+  service:
+    type: NodePort
+    port: 80
+    targetPort: 3000
+    nodePort: 30080
 
 kubeApiServer:
   enabled: true
@@ -63,10 +68,9 @@ kubelet:
 
 kubeControllerManager:
   enabled: true
-  endpoints: # ips of servers 
+  endpoints:
     - 10.0.4.20
     - 10.0.8.53
-  
 
 coreDns:
   enabled: true
@@ -76,7 +80,7 @@ kubeDns:
 
 kubeEtcd:
   enabled: true
-  endpoints: # ips of servers
+  endpoints:
     - 10.0.4.20
     - 10.0.8.53
   service:
@@ -86,13 +90,13 @@ kubeEtcd:
 
 kubeScheduler:
   enabled: true
-  endpoints: # ips of servers
+  endpoints:
     - 10.0.4.20
     - 10.0.8.53
 
 kubeProxy:
   enabled: true
-  endpoints: # ips of servers
+  endpoints:
     - 10.0.4.20
     - 10.0.8.53
 
