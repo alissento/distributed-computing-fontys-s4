@@ -22,8 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user,
     hasRole
   } = useAuthStore();
-  
-  // Compute isAuthenticated from authState
+
   const isAuthenticated = authState === 'authenticated';
   
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
