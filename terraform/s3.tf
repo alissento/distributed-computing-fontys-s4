@@ -7,6 +7,31 @@ resource "aws_s3_bucket" "kubernetes_bucket" {
   }
 }
 
+resource "aws_s3_bucket" "stock-data-bucket" {
+  bucket        = "stock-data-bucket-dc-group"
+  force_destroy = true
+  tags = {
+    Name        = "Stock-Data-Bucket"
+    Environment = "Dev"
+  }
+}
+resource "aws_s3_bucket" "stock-prediction-dump-bucket" {
+  bucket        = "stock-prediction-dump-bucket-dc-group"
+  force_destroy = true
+  tags = {
+    Name        = "Stock-Prediction-Dump-Bucket"
+    Environment = "Dev"
+  }
+}
+
+resource "aws_s3_bucket" "stock-jobs-bucket" {
+  bucket        = "stock-jobs-bucket-dc-group"
+  force_destroy = true
+  tags = {
+    Name        = "Stock-Jobs-Bucket"
+    Environment = "Dev"
+  }
+}
 resource "aws_s3_bucket_server_side_encryption_configuration" "kubernetes_bucket_encryption" {
   bucket = aws_s3_bucket.kubernetes_bucket.id
 
@@ -26,20 +51,6 @@ resource "aws_s3_bucket_versioning" "versioning" {
   }
 }
 
-# Uncomment when playbooks are ready
-# resource "aws_s3_object" "ansible_worker_node_script" {
-#   bucket = aws_s3_bucket.kubernetes_bucket.id
-#   key    = "ansible/masternode-playbook.yml"
-#   source = "ansible/masternode-playbook.yml"
-# }
-
-# resource "aws_s3_object" "ansible_master_node_script" {
-#   bucket = aws_s3_bucket.kubernetes_bucket.id
-#   key    = "ansible/workernode-playbook.yml"
-#   source = "ansible/workernode-playbook.yml"
-# }
-
-# Delete this after the playbooks are ready
 resource "aws_s3_object" "worker_node_script" {
   bucket = aws_s3_bucket.kubernetes_bucket.id
   key    = "ansible/masternode.sh"

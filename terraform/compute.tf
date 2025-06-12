@@ -74,6 +74,11 @@ resource "aws_iam_role_policy_attachment" "worker-node-rds-policy-attachment" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
 }
 
+resource "aws_iam_role_policy_attachment" "worker-node-sqs-policy-attachment" {
+  role       = aws_iam_role.worker-node-role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+}
+
 resource "aws_iam_policy" "ec2_tag_policy" {
   name        = "ec2-tag-policy"
   description = "Policy to allow EC2 instance tagging"

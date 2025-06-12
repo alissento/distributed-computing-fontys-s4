@@ -8,5 +8,5 @@ spec:
     app: go-api
   ports:
   - protocol: TCP
-    port: 1234
-    targetPort: 1234
+    port: 8080
+    targetPort: 8080
