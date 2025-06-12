@@ -276,6 +276,7 @@ resource "aws_instance" "control-plane" {
 
   lifecycle {
     ignore_changes = [
+      ami,
       tags["Name"],
     ]
   }
