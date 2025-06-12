@@ -3,31 +3,32 @@ name: Docker Build and Push to ECR
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ] 
+    branches: [ "main" ]
     paths:
       - "DCS4-Backend/**"
       - "DCS4-Frontend/**"
       - "Api&Processing/**"
-      - "kubernetes/monitoring/**"  
+      - "kubernetes/monitoring/**"
   pull_request:
     branches: [ "main" ]
     paths:
       - "DCS4-Backend/**"
       - "DCS4-Frontend/**"
       - "Api&Processing/**"
-      - "kubernetes/monitoring/**" 
+      - "kubernetes/monitoring/**"
+
 env:
   AWS_REGION: "eu-west-1"
-  ECR_REPOSITORY: "dc-container-repo" 
-  BACKEND_IMAGE_TAG: "backend-latest" 
+  ECR_REPOSITORY: "dc-container-repo"
+  BACKEND_IMAGE_TAG: "backend-latest"
   FRONTEND_IMAGE_TAG: "frontend-latest"
   GO_PROCESS_IMAGE_TAG: "go-process-latest"
   GO_API_IMAGE_TAG: "go-api-latest"
- 
+
 permissions:
   id-token: write
   contents: read
- 
+
 jobs:
   build-and-push:
     name: Build and Push Docker Images
@@ -42,23 +43,20 @@ jobs:
           role-to-assume: arn:aws:iam::657026912035:role/ECR-role
           aws-region: ${{ env.AWS_REGION }}
 
-      # --- Build and push backend ---
       - name: Build and push Backend Docker image
-        working-directory: ./DCS4-Backend 
+        working-directory: ./DCS4-Backend
         run: |
           docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.BACKEND_IMAGE_TAG }} .
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.BACKEND_IMAGE_TAG }}
 
-      # --- Build and push frontend ---
       - name: Build and push Frontend Docker image
-        working-directory: ./DCS4-Frontend 
+        working-directory: ./DCS4-Frontend
         run: |
           docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.FRONTEND_IMAGE_TAG }} .
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.FRONTEND_IMAGE_TAG }}
 
-      # --- Build and push go-process ---
       - name: Build and push go-process Docker image
         working-directory: ./Api&Processing/go-process
         run: |
@@ -66,7 +64,6 @@ jobs:
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.GO_PROCESS_IMAGE_TAG }}
 
-      # --- Build and push go-api ---
       - name: Build and push go-api Docker image
         working-directory: ./Api&Processing/go-api
         run: |
@@ -93,13 +90,21 @@ jobs:
 
       - name: Setup kubeconfig
         run: |
-          echo "${{ secrets.KUBECONFIG_CONTENT }}" > kubeconfig
-          export KUBECONFIG=kubeconfig
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 -d > kubeconfig
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig
+
+      - name: Verify access to cluster
+        run: kubectl get nodes
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig
 
       - name: Apply Monitoring Manifests
         run: |
           kubectl apply -f kubernetes/monitoring/namespace.yaml
           kubectl apply -f kubernetes/monitoring/grafana-secret.yml
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig
 
       - name: Install/Upgrade Prometheus Stack via Helm
         run: |
@@ -108,3 +113,5 @@ jobs:
           helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
             -n monitoring \
             -f kubernetes/monitoring/values.yaml
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig
