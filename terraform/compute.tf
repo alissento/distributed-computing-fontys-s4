@@ -146,9 +146,9 @@ resource "aws_iam_role_policy_attachment" "worker-node-ec2-tag-policy-attachment
 
 resource "aws_autoscaling_group" "worker-node-asg" {
   name                = "worker-node-asg"
-  desired_capacity    = 1
+  desired_capacity    = 3
   max_size            = 5
-  min_size            = 1
+  min_size            = 3
   vpc_zone_identifier = [aws_subnet.wkn-a.id, aws_subnet.wkn-b.id, aws_subnet.wkn-c.id]
   target_group_arns = [
     aws_lb_target_group.worker-node-api-target-group.arn,
