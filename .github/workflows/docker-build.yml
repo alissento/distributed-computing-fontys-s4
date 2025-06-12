@@ -76,7 +76,7 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     env:
-      KUBECONFIG: ${{ github.workspace }}/kubeconfig
+      KUBECONFIG: ${{ github.workspace }}/kubeconfig-content
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
