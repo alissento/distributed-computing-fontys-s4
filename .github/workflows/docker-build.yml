@@ -75,6 +75,8 @@ jobs:
     name: Deploy Monitoring Stack
     needs: build-and-push
     runs-on: ubuntu-latest
+    env:
+      KUBECONFIG: ${{ github.workspace }}/kubeconfig
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -90,21 +92,15 @@ jobs:
 
       - name: Setup kubeconfig
         run: |
-          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 -d > kubeconfig
-        env:
-          KUBECONFIG: ${{ github.workspace }}/kubeconfig
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 -d > $KUBECONFIG
 
       - name: Verify access to cluster
         run: kubectl get nodes
-        env:
-          KUBECONFIG: ${{ github.workspace }}/kubeconfig
 
       - name: Apply Monitoring Manifests
         run: |
           kubectl apply -f kubernetes/monitoring/namespace.yaml
           kubectl apply -f kubernetes/monitoring/grafana-secret.yml
-        env:
-          KUBECONFIG: ${{ github.workspace }}/kubeconfig
 
       - name: Install/Upgrade Prometheus Stack via Helm
         run: |
@@ -113,5 +109,3 @@ jobs:
           helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
             -n monitoring \
             -f kubernetes/monitoring/values.yaml
-        env:
-          KUBECONFIG: ${{ github.workspace }}/kubeconfig
