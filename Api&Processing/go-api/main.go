@@ -61,15 +61,15 @@ type RequestData struct {
 }
 
 func main() {
-	// Load enviroment variables
-	envFile := ".env.dev"
-	if os.Getenv("APP_ENV") == "production" {
-		envFile = ".env.aws"
-	}
 
-	err := godotenv.Load(envFile)
-	if err != nil {
-		log.Fatalf("Error loading env file %s: %v", envFile, err)
+	if os.Getenv("APP_ENV") == "" || os.Getenv("APP_ENV") == "local" {
+		envFile := ".env.dev"
+		err := godotenv.Load(envFile)
+		if err != nil {
+			log.Printf("Warning: could not load %s: %v", envFile, err)
+		}
+	} else {
+		log.Println("Running in production environment skipping .env load Hello norbert :D")
 	}
 
 	region = os.Getenv("AWS_REGION")
@@ -86,26 +86,32 @@ func main() {
 	awspassword = os.Getenv("AWS_PASSWORD")
 	jobBucket = os.Getenv("JOB_BUCKET")
 
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion(region), // You can still specify region if needed
-		config.WithEndpointResolver(aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
-			if service == s3.ServiceID || service == sqs.ServiceID {
-				return aws.Endpoint{
-					URL:               endpoint,
-					HostnameImmutable: true,
-				}, nil
-			}
-			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested for service: %s", service)
-		})),
-	)
+	var opts []func(*config.LoadOptions) error
+
+	opts = append(opts, config.WithRegion(region))
+
+	if endpoint != "" {
+
+		opts = append(opts, config.WithEndpointResolver(
+			aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+				if service == s3.ServiceID || service == sqs.ServiceID {
+					return aws.Endpoint{
+						URL:               endpoint,
+						HostnameImmutable: true,
+					}, nil
+				}
+				return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested for service: %s", service)
+			}),
+		))
+	}
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(), opts...)
 	if err != nil {
 		log.Fatal("Failed to load AWS config:", err)
 	}
 
 	s3Client = s3.NewFromConfig(cfg)
 	sqsClient = sqs.NewFromConfig(cfg)
-
-	// Start the HTTP server with the submit handler
 
 	r := mux.NewRouter()
 
