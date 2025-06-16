@@ -6,7 +6,7 @@ metadata:
   labels:
     app: backend
 spec:
-  replicas: 5
+  replicas: 3
   selector:
     matchLabels:
       app: backend
@@ -17,6 +17,14 @@ spec:
     spec:
       imagePullSecrets:
       - name: ecr-registry-secret
+      imagePullPolicy: Always
+      resources:
+        requests:
+          memory: "256Mi"
+          cpu: "100m"
+        limits:
+          memory: "512Mi"
+          cpu: "200m"
       containers:
       - name: backend
         image: 657026912035.dkr.ecr.eu-west-1.amazonaws.com/dc-container-repo:backend-latest

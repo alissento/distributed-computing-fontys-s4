@@ -6,7 +6,7 @@ metadata:
   labels:
     app: go-process
 spec:
-  replicas: 5
+  replicas: 3
   selector:
     matchLabels:
       app: go-process
