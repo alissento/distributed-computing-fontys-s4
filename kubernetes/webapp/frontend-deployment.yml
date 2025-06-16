@@ -17,7 +17,6 @@ spec:
     spec:
       imagePullSecrets:
       - name: ecr-registry-secret
-      imagePullPolicy: Always
       resources:
         requests:
           memory: "128Mi"
@@ -28,6 +27,7 @@ spec:
       containers:
       - name: frontend
         image: 657026912035.dkr.ecr.eu-west-1.amazonaws.com/dc-container-repo:frontend-latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         env:

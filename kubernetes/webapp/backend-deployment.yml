@@ -17,7 +17,6 @@ spec:
     spec:
       imagePullSecrets:
       - name: ecr-registry-secret
-      imagePullPolicy: Always
       resources:
         requests:
           memory: "256Mi"
@@ -28,6 +27,7 @@ spec:
       containers:
       - name: backend
         image: 657026912035.dkr.ecr.eu-west-1.amazonaws.com/dc-container-repo:backend-latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         env:
