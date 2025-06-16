@@ -50,3 +50,5 @@ spec:
               key: ALPHAVANTAGE_KEY
         - name: ALPHAVANTAGE_BASE_URL
           value: "https://www.alphavantage.co/query?"
+        - name: APP_ENV
+          value: "production"
