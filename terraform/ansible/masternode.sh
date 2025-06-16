@@ -52,6 +52,16 @@ echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.
 sudo apt update
 sudo apt install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
+
+INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+AZ=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
+PROVIDER_ID="aws:///${AZ}/${INSTANCE_ID}"
+
+cat <<EOF | sudo tee /etc/systemd/system/kubelet.service.d/20-cloud-provider.conf
+[Service]
+Environment="KUBELET_EXTRA_ARGS=--cloud-provider=external --provider-id=${PROVIDER_ID}"
+EOF
+
 sudo systemctl enable --now kubelet
 
 sudo kubeadm init --pod-network-cidr=192.168.0.0/16

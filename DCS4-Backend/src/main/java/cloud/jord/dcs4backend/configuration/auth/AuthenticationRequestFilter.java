@@ -40,6 +40,24 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
+        // Skip authentication for /health endpoint
+        if (request.getRequestURI().equals("/health")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // Allow /auth endpoints (including TOTP endpoints)
+        if (request.getRequestURI().startsWith("/auth")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // Allow post to /users (registration)
+        if (request.getMethod().equals("POST") && request.getRequestURI().equals("/users")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         // Get token from cookie
         String accessTokenString = extractTokenFromCookies(request);
         
@@ -56,6 +74,16 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
 
         try {
             AccessTokenUseCase accessToken = accessTokenDecoder.decode(accessTokenString);
+            
+            // SECURITY CHECK: Verify TOTP is enabled for all protected endpoints
+            User user = userService.getUser(accessToken.getUserId());
+            if (!user.isTotpEnabled()) {
+                // User has not completed TOTP setup - deny access to protected resources
+                logger.warn("Access denied to " + request.getRequestURI() + " - TOTP setup not completed for user " + user.getEmail());
+                sendAuthenticationError(response);
+                return;
+            }
+            
             setupSpringSecurityContext(accessToken);
             chain.doFilter(request, response);
         } catch (InvalidAccessTokenException e) {
@@ -99,13 +127,26 @@ public class AuthenticationRequestFilter extends OncePerRequestFilter {
         // Fetch user roles and permissions from the database
         User user = userService.getUser(accessToken.getUserId());
 
-        // Convert roles and permissions to SimpleGrantedAuthority objects
+        // Bit hacky but does the job
         Set<GrantedAuthority> authorities = new HashSet<>();
-        authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + user.getRole().name()));
+        switch (user.getRole()) {
+            case ADMIN:
+                authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + "ADMIN"));
+                authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + "USER"));
+                authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + "ANALYST"));
+                break;
+            case ANALYST:
+                authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + "ANALYST"));
+                authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + "USER"));
+                break;
+            case USER:
+                authorities.add(new SimpleGrantedAuthority(SPRING_SECURITY_ROLE_PREFIX + "USER"));
+                break;
+        }
 
         // Create UserDetails with the authorities
         UserDetails userDetails = new CustomUserDetails(
-            accessToken.getUserId(), 
+            accessToken.getUserId(),
             accessToken.getName() != null ? accessToken.getName() : user.getName(),
             accessToken.getEmail(),
             authorities

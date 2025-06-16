@@ -40,3 +40,5 @@ crash.*.log
 
 # Ignore .env files (add this line to exclude .env from Git)
 .env*
+
+.idea

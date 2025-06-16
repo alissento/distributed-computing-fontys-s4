@@ -8,7 +8,7 @@ echo "Installing AWS CLI, Ansible, unzip, htp and other dependencies necessary f
 
 apt update
 apt upgrade -y
-apt install -y ansible unzip htop apt-transport-https ca-certificates curl gnupg lsb-release gpg
+apt install -y ansible unzip htop apt-transport-https ca-certificates curl gnupg lsb-release gpg git postgresql-client
 
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
@@ -23,6 +23,10 @@ AZ=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/me
 NODE_TYPE=$(aws ec2 describe-tags --filters "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=NodeType" --region $REGION --query "Tags[0].Value" --output text)
 TAG_NAME="$NODE_TYPE-$AZ-${INSTANCE_ID: -8}"
 
+AWS_ACCOUNT_ID="657026912035"
+ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
+ECR_PASSWORD=$(aws ecr get-login-password --region "${REGION}")
+
 aws ec2 create-tags --resources $INSTANCE_ID --tags Key=Name,Value=$TAG_NAME --region $REGION
 echo "Instance tagged with Name: $TAG_NAME"
 
@@ -35,6 +39,10 @@ if [ "$NODE_TYPE" == "control-plane" ]; then
     chmod +x /tmp/masternode.sh
     /tmp/masternode.sh
     echo "Master node setup completed"
+    echo "Cloning the GitHub repository to /home/ubuntu/github-repo"
+    git clone https://github.com/alissento/distributed-computing-fontys-s4.git /home/ubuntu/github-repo
+    echo "Repository cloned successfully"
+
 elif [ "$NODE_TYPE" == "worker-node" ]; then
     echo "Worker node detected, downloading shell script to install worker node software"
 

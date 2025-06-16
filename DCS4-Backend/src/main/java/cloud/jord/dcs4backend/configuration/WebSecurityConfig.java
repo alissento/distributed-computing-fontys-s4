@@ -3,6 +3,7 @@ package cloud.jord.dcs4backend.configuration;
 import cloud.jord.dcs4backend.configuration.auth.AuthenticationRequestFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -52,7 +53,13 @@ public class WebSecurityConfig {
                                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                                 .anyRequest().authenticated()*//*
                 )*/
-                .authorizeHttpRequests(authorizeRequests -> authorizeRequests.anyRequest().permitAll())
+                .authorizeHttpRequests(authorizeRequests ->
+                        authorizeRequests
+                                .requestMatchers(HttpMethod.GET, "/health").permitAll()
+                                .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/users").permitAll()
+                                .anyRequest().authenticated()
+                )
                 .exceptionHandling(configure -> configure.authenticationEntryPoint(authenticationEntryPoint))
                 .addFilterBefore(authenticationRequestFilter, UsernamePasswordAuthenticationFilter.class)
                 /*.oauth2Login(oauth2 -> oauth2
@@ -69,7 +76,9 @@ public class WebSecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
                 "http://localhost:9090",
-                "https://ors.jord.cloud"
+                "https://ors.jord.cloud",
+                "https://norbertknez.me",
+                "https://api.norbertknez.me"
         ));
         
         // Specify allowed methods

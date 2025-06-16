@@ -1,10 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { RecentCalculations } from "../components/recent-calculations"
-import { HighConvictionPredictions } from "../components/high-conviction-predictions"
 import { StockOverview } from "../components/stock-overview"
-import { MarketSummary } from "../components/market-summary"
-import {LineChart, TrendingUp, Star, Users} from "lucide-react"
 
 export default function Dashboard() {
     return (
@@ -14,11 +11,11 @@ export default function Dashboard() {
                 <Tabs defaultValue="overview" className="space-y-4 w-full">
                     <TabsList>
                         <TabsTrigger value="overview">Overview</TabsTrigger>
-                        <TabsTrigger value="predictions">Predictions</TabsTrigger>
-                        <TabsTrigger value="analytics">Analytics</TabsTrigger>
+                        {/*<TabsTrigger value="predictions">Predictions</TabsTrigger>
+                        <TabsTrigger value="analytics">Analytics</TabsTrigger>*/}
                     </TabsList>
                     <TabsContent value="overview" className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        {/*<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                             <Card>
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">Total Predictions</CardTitle>
@@ -59,27 +56,25 @@ export default function Dashboard() {
                                     <p className="text-xs text-muted-foreground">+24 from last month</p>
                                 </CardContent>
                             </Card>
-                        </div>
+                        </div>*/}
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                            <Card className="col-span-4">
+                            {/*<Card className="col-span-4">
                                 <CardHeader>
                                     <CardTitle>Market Summary</CardTitle>
                                 </CardHeader>
                                 <CardContent className="pl-2">
                                     <MarketSummary />
                                 </CardContent>
-                            </Card>
+                            </Card>*/}
                             <Card className="col-span-3">
                                 <CardHeader>
                                     <CardTitle>Stock Overview</CardTitle>
-                                    <CardDescription>Top performing stocks based on our predictions</CardDescription>
+                                    <CardDescription>Overview of our top 8 analyzed stocks</CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <StockOverview />
                                 </CardContent>
                             </Card>
-                        </div>
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                             <Card className="col-span-4">
                                 <CardHeader>
                                     <CardTitle>Recent Calculations</CardTitle>
@@ -89,6 +84,9 @@ export default function Dashboard() {
                                     <RecentCalculations />
                                 </CardContent>
                             </Card>
+                        </div>
+                        {/*<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+
                             <Card className="col-span-3">
                                 <CardHeader>
                                     <CardTitle>High Conviction Predictions</CardTitle>
@@ -98,7 +96,7 @@ export default function Dashboard() {
                                     <HighConvictionPredictions />
                                 </CardContent>
                             </Card>
-                        </div>
+                        </div>*/}
                     </TabsContent>
                 </Tabs>
             </div>

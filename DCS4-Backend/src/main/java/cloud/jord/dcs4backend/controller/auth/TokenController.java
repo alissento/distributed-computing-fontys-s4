@@ -2,9 +2,12 @@ package cloud.jord.dcs4backend.controller.auth;
 
 import cloud.jord.dcs4backend.business.TokenServiceUseCase;
 import cloud.jord.dcs4backend.business.UserServiceUseCase;
+import cloud.jord.dcs4backend.business.TotpServiceUseCase;
 import cloud.jord.dcs4backend.domain.User;
 import cloud.jord.dcs4backend.domain.request.TokenRequest;
+import cloud.jord.dcs4backend.domain.request.TotpTokenRequest;
 import cloud.jord.dcs4backend.domain.response.TokenResponse;
+import cloud.jord.dcs4backend.domain.response.AuthenticationResponse;
 import cloud.jord.dcs4backend.domain.response.UserInfoResponse;
 import cloud.jord.dcs4backend.configuration.auth.token.AccessTokenDecoderUseCase;
 import cloud.jord.dcs4backend.configuration.auth.token.AccessTokenUseCase;
@@ -22,6 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class TokenController {
     private final TokenServiceUseCase tokenService;
     private final UserServiceUseCase userService;
+    private final TotpServiceUseCase totpService;
     private final AccessTokenDecoderUseCase tokenDecoder;
     
     // Cookie settings
@@ -30,29 +34,99 @@ public class TokenController {
     private static final String COOKIE_PATH = "/";
 
     @PostMapping
-    public ResponseEntity<TokenResponse> create(@RequestBody TokenRequest request, HttpServletResponse response) {
-        String token = tokenService.authenticate(request.getEmail(), request.getPassword());
-        
-        // Set the token as an HttpOnly cookie
-        setCookie(response, token);
-        
-        // Decode token to get user info to return to client
-        AccessTokenUseCase decodedToken = tokenDecoder.decode(token);
-        
-        // Return user info AND the token in the response body
-        UserInfoResponse userInfo = new UserInfoResponse(
-            decodedToken.getUserId().toString(),
-            decodedToken.getEmail(),
-            decodedToken.getName(),
-            decodedToken.getRole()
-        );
-        
-        // Create response with both token and user info
-        TokenResponse tokenResponse = new TokenResponse();
-        tokenResponse.setToken(token);
-        tokenResponse.setUser(userInfo);
-        
-        return ResponseEntity.ok(tokenResponse);
+    public ResponseEntity<AuthenticationResponse> create(@RequestBody TokenRequest request, HttpServletResponse response) {
+        try {
+            // First, validate email and password
+            User user = userService.getUser(request.getEmail());
+            
+            // Validate password using the token service (will throw if invalid)
+            tokenService.validateCredentials(request.getEmail(), request.getPassword());
+            
+            // Check if user has TOTP enabled
+            if (user.isTotpEnabled()) {
+                // Return TOTP required status
+                AuthenticationResponse authResponse = new AuthenticationResponse();
+                authResponse.setStatus("totp_required");
+                authResponse.setEmail(user.getEmail());
+                authResponse.setToken(null);
+                authResponse.setUser(null);
+                
+                return ResponseEntity.ok(authResponse);
+            } else {
+                // User doesn't have TOTP enabled, proceed with normal authentication
+                String token = tokenService.authenticate(request.getEmail(), request.getPassword());
+                
+                // Set the token as an HttpOnly cookie
+                setCookie(response, token);
+                
+                // Decode token to get user info to return to client
+                AccessTokenUseCase decodedToken = tokenDecoder.decode(token);
+                
+                // Return user info AND the token in the response body
+                UserInfoResponse userInfo = new UserInfoResponse(
+                    decodedToken.getUserId().toString(),
+                    decodedToken.getEmail(),
+                    decodedToken.getName(),
+                    decodedToken.getRole()
+                );
+                
+                // Create successful authentication response
+                AuthenticationResponse authResponse = new AuthenticationResponse();
+                authResponse.setStatus("authenticated");
+                authResponse.setToken(token);
+                authResponse.setUser(userInfo);
+                authResponse.setEmail(user.getEmail());
+                
+                return ResponseEntity.ok(authResponse);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpServletResponse.SC_UNAUTHORIZED).build();
+        }
+    }
+    
+    @PostMapping("/totp-verify")
+    public ResponseEntity<AuthenticationResponse> verifyTotpAndCreateToken(@RequestBody TotpTokenRequest request, HttpServletResponse response) {
+        try {
+            // Get user and validate TOTP is enabled
+            User user = userService.getUser(request.getEmail());
+            
+            if (!user.isTotpEnabled() || user.getTotpSecret() == null) {
+                return ResponseEntity.status(HttpServletResponse.SC_BAD_REQUEST).build();
+            }
+            
+            // Verify TOTP code
+            if (!totpService.verifyCode(user.getTotpSecret(), request.getTotpCode())) {
+                return ResponseEntity.status(HttpServletResponse.SC_UNAUTHORIZED).build();
+            }
+            
+            // TOTP is valid, create full access token
+            String token = tokenService.authenticateWithTotpVerified(user.getEmail());
+            
+            // Set the token as an HttpOnly cookie
+            setCookie(response, token);
+            
+            // Decode token to get user info to return to client
+            AccessTokenUseCase decodedToken = tokenDecoder.decode(token);
+            
+            // Return user info AND the token in the response body
+            UserInfoResponse userInfo = new UserInfoResponse(
+                decodedToken.getUserId().toString(),
+                decodedToken.getEmail(),
+                decodedToken.getName(),
+                decodedToken.getRole()
+            );
+            
+            // Create successful authentication response
+            AuthenticationResponse authResponse = new AuthenticationResponse();
+            authResponse.setStatus("authenticated");
+            authResponse.setToken(token);
+            authResponse.setUser(userInfo);
+            authResponse.setEmail(user.getEmail());
+            
+            return ResponseEntity.ok(authResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpServletResponse.SC_UNAUTHORIZED).build();
+        }
     }
     
     @DeleteMapping

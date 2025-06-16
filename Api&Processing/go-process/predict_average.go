@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-// LinearRegressionPredict predicts future stock closing prices based on historical data
 func LinearRegressionPredict(historicalData []float64, futureDates []string) map[string]map[string]string {
 	// Calculate the linear regression slope (m) and intercept (b)
 	n := float64(len(historicalData))
@@ -19,10 +18,9 @@ func LinearRegressionPredict(historicalData []float64, futureDates []string) map
 		return nil
 	}
 
-	// Calculate mean of x and y
 	var sumX, sumY, sumXY, sumX2 float64
 	for i := 0; i < len(historicalData); i++ {
-		x := float64(i + 1) // x is just an index from 1 to n
+		x := float64(i + 1)
 		y := historicalData[i]
 		sumX += x
 		sumY += y
@@ -30,19 +28,16 @@ func LinearRegressionPredict(historicalData []float64, futureDates []string) map
 		sumX2 += x * x
 	}
 
-	// Calculate slope (m) and intercept (b)
 	m := (n*sumXY - sumX*sumY) / (n*sumX2 - sumX*sumX)
 	b := (sumY - m*sumX) / n
 
-	// Use the regression formula y = mx + b to predict future prices
 	predictedData := make(map[string]map[string]string)
 	for i, date := range futureDates {
-		// Using regression formula: y = mx + b
 		predictedClose := m*float64(i+len(historicalData)) + b
-		open := predictedClose * (1 + (rand.Float64()/50 - 0.01)) // Open price, +/- 1%
-		high := predictedClose * (1 + (rand.Float64()/50 + 0.01)) // High price, 1-2% higher
-		low := predictedClose * (1 - (rand.Float64()/50 + 0.01))  // Low price, 1-2% lower
-		volume := rand.Intn(1000000) + 500000                     // Random volume between 500k and 1.5M
+		open := predictedClose * (1 + (rand.Float64()/50 - 0.01))
+		high := predictedClose * (1 + (rand.Float64()/50 + 0.01))
+		low := predictedClose * (1 - (rand.Float64()/50 + 0.01))
+		volume := rand.Intn(1000000) + 500000
 
 		predictedData[date] = map[string]string{
 			"1. open":   fmt.Sprintf("%.4f", open),
@@ -56,10 +51,9 @@ func LinearRegressionPredict(historicalData []float64, futureDates []string) map
 	return predictedData
 }
 
-// PredictAverage generates the predicted stock data based on job request and historical data
 func PredictAverage(stockData StockData, job JobRequest) (map[string]map[string]string, error) {
-	// Convert start and end dates
-	startDate, err := time.Parse("2006-01-02", job.StartDate)
+
+	startDate, err := time.Parse("2006-01-02", job.StartDate) //TODO maak een functie
 	if err != nil {
 		log.Println("Invalid start date:", err)
 		return nil, err
@@ -71,7 +65,6 @@ func PredictAverage(stockData StockData, job JobRequest) (map[string]map[string]
 		return nil, err
 	}
 
-	// Get historical close prices
 	var historicalClosePrices []float64
 	for dateStr, dayData := range stockData.TimeSeriesDaily {
 		date, err := time.Parse("2006-01-02", dateStr)

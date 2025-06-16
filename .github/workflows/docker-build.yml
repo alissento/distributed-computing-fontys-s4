@@ -1,47 +1,111 @@
 name: Docker Build and Push to ECR
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ "main" ] 
+    branches: [ "main" ]
+    paths:
+      - "DCS4-Backend/**"
+      - "DCS4-Frontend/**"
+      - "Api&Processing/**"
+      - "kubernetes/monitoring/**"
   pull_request:
     branches: [ "main" ]
- 
+    paths:
+      - "DCS4-Backend/**"
+      - "DCS4-Frontend/**"
+      - "Api&Processing/**"
+      - "kubernetes/monitoring/**"
+
 env:
   AWS_REGION: "eu-west-1"
-  ECR_REPOSITORY: "dc-container-repo" 
-  BACKEND_IMAGE_TAG: "backend-latest" 
+  ECR_REPOSITORY: "dc-container-repo"
+  BACKEND_IMAGE_TAG: "backend-latest"
   FRONTEND_IMAGE_TAG: "frontend-latest"
- 
+  GO_PROCESS_IMAGE_TAG: "go-process-latest"
+  GO_API_IMAGE_TAG: "go-api-latest"
+
 permissions:
   id-token: write
   contents: read
- 
+
 jobs:
   build-and-push:
     name: Build and Push Docker Images
     runs-on: ubuntu-latest
- 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
- 
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::657026912035:role/ECR-role
           aws-region: ${{ env.AWS_REGION }}
- 
-      # Backend image
+
       - name: Build and push Backend Docker image
-        working-directory: ./DCS4-Backend 
+        working-directory: ./DCS4-Backend
         run: |
-          # Build with full ECR repository URI
           docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.BACKEND_IMAGE_TAG }} .
-          
-          # Login to ECR
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-          
-          # Push to ECR
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.BACKEND_IMAGE_TAG }}
- 
-      
+
+      - name: Build and push Frontend Docker image
+        working-directory: ./DCS4-Frontend
+        run: |
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.FRONTEND_IMAGE_TAG }} .
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.FRONTEND_IMAGE_TAG }}
+
+      - name: Build and push go-process Docker image
+        working-directory: ./Api&Processing/go-process
+        run: |
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.GO_PROCESS_IMAGE_TAG }} .
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.GO_PROCESS_IMAGE_TAG }}
+
+      - name: Build and push go-api Docker image
+        working-directory: ./Api&Processing/go-api
+        run: |
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.GO_API_IMAGE_TAG }} .
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.GO_API_IMAGE_TAG }}
+
+  deploy-monitoring:
+    name: Deploy Monitoring Stack
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    env:
+      KUBECONFIG: ${{ github.workspace }}/KUBECONFIG_CONTENT
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::657026912035:role/ECR-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Setup kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 -d > $KUBECONFIG
+
+      - name: Verify access to cluster
+        run: kubectl get nodes
+
+      - name: Apply Monitoring Manifests
+        run: |
+          kubectl apply -f kubernetes/monitoring/namespace.yaml
+          kubectl apply -f kubernetes/monitoring/grafana-secret.yml
+
+      - name: Install/Upgrade Prometheus Stack via Helm
+        run: |
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+          helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+            -n monitoring \
+            -f kubernetes/monitoring/values.yaml

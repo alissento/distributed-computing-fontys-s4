@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/gorilla/mux"
@@ -31,9 +30,19 @@ var (
 	sqsClient           *sqs.Client
 	awsname             string
 	awspassword         string
+	jobBucket           string
 )
 
 // initialize the request
+type JobStatusResponse struct {
+	S3Key          string `json:"s3_key"`
+	ProcessingType string `json:"processing_type"`
+	JumpDays       int    `json:"jump_days"`
+	StartDate      string `json:"start_date"`
+	EndDate        string `json:"end_date"`
+	JobID          string `json:"job_id"`
+	JobStatus      string `json:"job_status"`
+}
 type JobRequest struct {
 	S3Key          string `json:"s3_key"`
 	ProcessingType string `json:"processing_type"`
@@ -41,6 +50,7 @@ type JobRequest struct {
 	JumpDays       int    `json:"jump_days"`
 	EndDate        string `json:"end_date"`
 	JobID          string `json:"job_id"`
+	JobStatus      string `json:"job_status"` // Initial status of the job
 }
 type RequestData struct {
 	StockSymbol    string `json:"stock_symbol"`
@@ -63,7 +73,7 @@ func main() {
 	}
 
 	region = os.Getenv("AWS_REGION")
-	endpoint = os.Getenv("S3_ENDPOINT") // optional, for local dev
+	endpoint = os.Getenv("S3_ENDPOINT")
 	accessKey = os.Getenv("AWS_ACCESS_KEY_ID")
 	secretKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	queueURL = os.Getenv("QUEUE_URL")
@@ -74,32 +84,22 @@ func main() {
 	StockDataBucketName = os.Getenv("STOCK_DATA_BUCKET")
 	awsname = os.Getenv("AWS_NAME")
 	awspassword = os.Getenv("AWS_PASSWORD")
+	jobBucket = os.Getenv("JOB_BUCKET")
 
-	// Load the AWS SDK configuration with correct LocalStack endpoint for both SQS and S3
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion(region),
-		config.WithCredentialsProvider(
-			aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(awsname, awspassword, ""))),
+		config.WithRegion(region), // You can still specify region if needed
 		config.WithEndpointResolver(aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
-			if service == s3.ServiceID {
-				// Explicitly set the endpoint for S3
+			if service == s3.ServiceID || service == sqs.ServiceID {
 				return aws.Endpoint{
 					URL:               endpoint,
-					HostnameImmutable: true, // Prevents host rewriting
-				}, nil
-			}
-			if service == sqs.ServiceID {
-				// Explicitly set the endpoint for SQS
-				return aws.Endpoint{
-					URL:               endpoint,
-					HostnameImmutable: true, // Prevents host rewriting
+					HostnameImmutable: true,
 				}, nil
 			}
 			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested for service: %s", service)
 		})),
 	)
 	if err != nil {
-		log.Fatal("Failed to load config:", err)
+		log.Fatal("Failed to load AWS config:", err)
 	}
 
 	s3Client = s3.NewFromConfig(cfg)
@@ -108,18 +108,15 @@ func main() {
 	// Start the HTTP server with the submit handler
 
 	r := mux.NewRouter()
-	// Exact match for /stocks
-	r.HandleFunc("/stocks", Handle_Stock_Symbols).Methods("GET")
 
-	// Match with path parameter
-	r.HandleFunc("/stocks/{stock_name}", Handle_Stock_Request).Methods("GET")
+	r.HandleFunc("/stocks", Handle_Stock_Symbols).Methods("GET")                      //Return all stock symbols
+	r.HandleFunc("/stocks/{stock_name}/history", Handle_Stock_History).Methods("GET") //fetch stock history data
 
-	// Historical data route (replace "stocknaam" with actual param if needed)
-	r.HandleFunc("/stocks/history/{stock_name}", Handle_Stock_History).Methods("GET")
-
-	// // Job status route
-	// r.HandleFunc("/job/jobstatus", Handle_Job_Status).Methods("GET")
-
+	r.HandleFunc("/jobs", Handle_Job_Request).Methods("POST")          //submit job request for stock data processing
+	r.HandleFunc("/jobs/{job_id}/status", getJobStatus).Methods("GET") //return job status by job_id
+	r.HandleFunc("/jobs", getAllJobs).Methods("GET")                   //return all jobs
+	r.HandleFunc("/jobs/{job_id}/result", getJobResult).Methods("GET") //return job result by job_id
+	r.HandleFunc("/jobs/{job_id}/pdf", getJobPdf).Methods("GET")       //return job pdf.
 	log.Println("API server running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
