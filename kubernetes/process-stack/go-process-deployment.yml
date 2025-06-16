@@ -27,6 +27,7 @@ spec:
       containers:
       - name: go-process
         image: 657026912035.dkr.ecr.eu-west-1.amazonaws.com/dc-container-repo:go-process-latest
+        imagePullPolicy: Always
         env:
         - name: AWS_REGION
           value: "eu-west-1"
