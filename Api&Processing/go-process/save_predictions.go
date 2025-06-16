@@ -18,6 +18,10 @@ func savePredictionsToS3(jobID string, result map[string]map[string]string, pref
 	if err != nil {
 		return fmt.Errorf("failed to save result to S3: %w", err)
 	}
+	err = GenerateJobPdf(result, jobID)
+	if err != nil {
+		return fmt.Errorf("failed to generate PDF for job %s: %w", jobID, err)
+	}
 
 	log.Printf("Successfully saved predictions for job %s to %s", jobID, key)
 	return nil

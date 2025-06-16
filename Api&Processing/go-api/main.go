@@ -128,7 +128,7 @@ func main() {
 	r.HandleFunc("/jobs/{job_id}/status", getJobStatus).Methods("GET") //return job status by job_id
 	r.HandleFunc("/jobs", getAllJobs).Methods("GET")                   //return all jobs
 	r.HandleFunc("/jobs/{job_id}/result", getJobResult).Methods("GET") //return job result by job_id
-
+	r.HandleFunc("/jobs/{job_id}/pdf", getJobPdf).Methods("GET")       //return job pdf.
 	log.Println("API server running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
