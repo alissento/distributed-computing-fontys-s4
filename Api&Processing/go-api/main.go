@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/gorilla/mux"
@@ -87,21 +86,10 @@ func main() {
 	awspassword = os.Getenv("AWS_PASSWORD")
 	jobBucket = os.Getenv("JOB_BUCKET")
 
-	// Load the AWS SDK configuration with correct LocalStack endpoint for both SQS and S3
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion(region),
-		config.WithCredentialsProvider(
-			aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(awsname, awspassword, ""))),
+		config.WithRegion(region), // You can still specify region if needed
 		config.WithEndpointResolver(aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
-			if service == s3.ServiceID {
-				// Explicitly set the endpoint for S3
-				return aws.Endpoint{
-					URL:               endpoint,
-					HostnameImmutable: true, // Prevents host rewriting
-				}, nil
-			}
-			if service == sqs.ServiceID {
-
+			if service == s3.ServiceID || service == sqs.ServiceID {
 				return aws.Endpoint{
 					URL:               endpoint,
 					HostnameImmutable: true,
@@ -111,7 +99,7 @@ func main() {
 		})),
 	)
 	if err != nil {
-		log.Fatal("Failed to load config:", err)
+		log.Fatal("Failed to load AWS config:", err)
 	}
 
 	s3Client = s3.NewFromConfig(cfg)

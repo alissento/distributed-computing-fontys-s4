@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/joho/godotenv"
@@ -80,16 +79,8 @@ func main() {
 
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion(region),
-		config.WithCredentialsProvider(
-			aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(awsname, awspassword, ""))),
 		config.WithEndpointResolver(aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
-			if service == s3.ServiceID {
-				return aws.Endpoint{
-					URL:               endpoint,
-					HostnameImmutable: true,
-				}, nil
-			}
-			if service == sqs.ServiceID {
+			if service == s3.ServiceID || service == sqs.ServiceID {
 				return aws.Endpoint{
 					URL:               endpoint,
 					HostnameImmutable: true,
@@ -99,7 +90,7 @@ func main() {
 		})),
 	)
 	if err != nil {
-		log.Fatal("Failed to load config:", err)
+		log.Fatal("Failed to load AWS config:", err)
 	}
 
 	s3Client = s3.NewFromConfig(cfg)
