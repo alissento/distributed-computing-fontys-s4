@@ -7,6 +7,7 @@ import cloud.jord.dcs4backend.domain.response.StockResponse;
 import cloud.jord.dcs4backend.domain.response.StocksResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,12 +21,14 @@ import static org.springframework.http.ResponseEntity.ok;
 public class StockController {
     private final StockServiceUseCase stockService;
 
+    @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping
     public ResponseEntity<StocksResponse> getStocks() {
         StocksResponse response = stockService.getStocks();
         return ok(response);
     }
 
+    @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping("{symbol}")
     public ResponseEntity<StockHistoryResponse> getStockHistory(String symbol) {
         StockHistoryResponse response = stockService.getStockHistory(symbol);

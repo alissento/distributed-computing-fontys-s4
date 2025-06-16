@@ -46,14 +46,11 @@ export default function Login() {
             
             // Submit to API via store
             await login(formData.email, formData.password)
-            toast("Login successful", {
-                description: "Welcome back!"
-            })
+            setIsSubmitting(false)
             
-            // Add a short delay before navigating to prevent race conditions
-            setTimeout(() => {
-                navigate("/")
-            }, 300)
+            // Don't show success toast here - AuthStore will handle the flow
+            // If login succeeds immediately (no TOTP), user will be redirected by AppRoutes
+            // If TOTP is required, user will see TOTP verification screen
         } catch (error) {
             setIsSubmitting(false)
             if (error instanceof z.ZodError) {

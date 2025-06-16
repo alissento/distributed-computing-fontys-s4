@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-api-deployment
+  namespace: process-stack
+  labels:
+    app: go-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: go-api 
+  template:
+    metadata:
+      labels:
+        app: go-api
+    spec:
+      imagePullSecrets:
+      - name: ecr-registry-secret
+      resources:
+        requests:
+          memory: "256Mi"
+          cpu: "250m"
+        limits:
+          memory: "512Mi"
+          cpu: "500m"
+      containers:
+      - name: go-api
+        image: 657026912035.dkr.ecr.eu-west-1.amazonaws.com/dc-container-repo:go-api-latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: AWS_REGION
+          value: "eu-west-1"
+        - name: QUEUE_URL
+          value: "https://sqs.eu-west-1.amazonaws.com/657026912035/ApplicationQueue"
+        - name: BUCKET_NAME
+          value: "stock-data-bucket-dc-group"
+        - name: PREDICTION_BUCKET
+          value: "stock-prediction-dump-bucket-dc-group"
+        - name: STOCK_DATA_BUCKET
+          value: "stock-data-bucket-dc-group"
+        - name: JOB_BUCKET
+          value: "stock-jobs-bucket-dc-group"
+        - name: ALPHAVANTAGE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: alphavantage-secret
+              key: ALPHAVANTAGE_KEY
+        - name: ALPHAVANTAGE_BASE_URL
+          value: "https://www.alphavantage.co/query?"

@@ -9,6 +9,8 @@ import AdminCalculations from "@/app/admin/calculations.tsx";
 import AdminUsers from "@/app/admin/users.tsx";
 import AdminSettings from "@/app/admin/settings.tsx";
 import Login from "@/app/login.tsx";
+import TotpVerification from "@/components/TotpVerification";
+import TotpSetup from "@/components/TotpSetup";
 import {Toaster} from "sonner";
 import ProtectedRoute from "@/components/protected-route.tsx";
 import {Role} from "@/types/user.ts";
@@ -28,16 +30,29 @@ const queryClient = new QueryClient({
 });
 
 function AppRoutes() {
-    const {isAuthenticated, isLoading} = useAuth();
+    const {isAuthenticated, authState, isLoading} = useAuth();
     
     if (isLoading) {
         return <FullScreenLoader />;
     }
     
+    // Handle TOTP flows
+    if (authState === 'pending_totp') {
+        return <TotpVerification />;
+    }
+    
+    if (authState === 'pending_totp_setup') {
+        return <TotpSetup />;
+    }
+    
     return (
         <Routes>
-            <Route path="/login" element={<Login/>}/>
-            <Route path="/register" element={<Register/>}/>
+            <Route path="/login" element={
+                !isAuthenticated ? <Login/> : <Navigate to="/" replace />
+            }/>
+            <Route path="/register" element={
+                !isAuthenticated ? <Register/> : <Navigate to="/" replace />
+            }/>
             <Route path="/" element={
                 isAuthenticated ? <Layout/> : <Navigate to="/login" replace />
             }>

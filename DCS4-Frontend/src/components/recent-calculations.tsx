@@ -4,6 +4,7 @@ import {useAuth} from "@/contexts/AuthContext.tsx";
 import {useEffect, useState} from "react";
 import Spinner from "./ui/spinner";
 import {Badge} from "./ui/badge";
+import {DownloadIcon} from "lucide-react";
 
 type JobStatus = {
     s3_key: string;
@@ -28,7 +29,12 @@ export function RecentCalculations() {
 
         JobsAPI.getAllJobs()
             .then((data) => {
+                if (!Array.isArray(data)) {
+                    console.error("Unexpected response format, expected an array.");
+                    return;
+                }
                 setJobs(data);
+
                 // Initialize loading states for all jobs
                 const initialLoadingStates = data.reduce((acc, jobId) => {
                     acc[jobId] = true;
@@ -48,6 +54,9 @@ export function RecentCalculations() {
                             setLoadingStatuses(prev => ({...prev, [jobId]: false}));
                         });
                 });
+            })
+            .catch(error => {
+                console.error("Error fetching jobs:", error);
             });
     }, [isAuthenticated, isLoading]);
 
@@ -64,10 +73,11 @@ export function RecentCalculations() {
                     <TableHead>Status</TableHead>
                     <TableHead>Processing Type</TableHead>
                     <TableHead>Date Range</TableHead>
+                    <TableHead>Download</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {jobs.map((jobId) => (
+                {jobs ? jobs.map((jobId) => (
                     <TableRow key={jobId}>
                         <TableCell className="font-medium">{jobId}</TableCell>
                         <TableCell>
@@ -100,8 +110,17 @@ export function RecentCalculations() {
                                 `${jobStatuses[jobId]?.start_date} - ${jobStatuses[jobId]?.end_date}`
                             )}
                         </TableCell>
+                        <TableCell className="flex items-center justify-center">
+                            {loadingStatuses[jobId] ? (
+                                <Spinner />
+                            ) : (
+                                <a href={jobStatuses[jobId]?.job_id} target="_blank" rel="noopener noreferrer">
+                                    <DownloadIcon className="m-auto" />
+                                </a>
+                            )}
+                        </TableCell>
                     </TableRow>
-                ))}
+                )) : null}
             </TableBody>
         </Table>
     )

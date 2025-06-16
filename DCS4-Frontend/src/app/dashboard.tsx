@@ -1,10 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { RecentCalculations } from "../components/recent-calculations"
-import { HighConvictionPredictions } from "../components/high-conviction-predictions"
 import { StockOverview } from "../components/stock-overview"
-import { MarketSummary } from "../components/market-summary"
-import {LineChart, TrendingUp, Star, Users} from "lucide-react"
 
 export default function Dashboard() {
     return (

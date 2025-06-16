@@ -74,6 +74,11 @@ resource "aws_iam_role_policy_attachment" "worker-node-rds-policy-attachment" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
 }
 
+resource "aws_iam_role_policy_attachment" "worker-node-sqs-policy-attachment" {
+  role       = aws_iam_role.worker-node-role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+}
+
 resource "aws_iam_policy" "ec2_tag_policy" {
   name        = "ec2-tag-policy"
   description = "Policy to allow EC2 instance tagging"
@@ -94,6 +99,46 @@ resource "aws_iam_policy" "ec2_tag_policy" {
                 EOF
 }
 
+resource "aws_iam_role_policy_attachment" "worker-node-cluster-autoscaler-policy-attachment" {
+  role       = aws_iam_role.worker-node-role.name
+  policy_arn = aws_iam_policy.cluster_autoscaler_policy.arn
+}
+
+resource "aws_iam_policy" "cluster_autoscaler_policy" {
+  name        = "cluster-autoscaler-policy"
+  description = "Policy for Kubernetes Cluster Autoscaler"
+  policy      = <<EOF
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "autoscaling:DescribeAutoScalingGroups",
+                        "autoscaling:DescribeAutoScalingInstances",
+                        "autoscaling:DescribeLaunchConfigurations",
+                        "autoscaling:DescribeScalingActivities",
+                        "autoscaling:SetDesiredCapacity",
+                        "autoscaling:TerminateInstanceInAutoScalingGroup",
+                        "autoscaling:UpdateAutoScalingGroup",
+                        "ec2:DescribeImages",
+                        "ec2:DescribeInstances",
+                        "ec2:DescribeInstanceTypes",
+                        "ec2:DescribeLaunchTemplateVersions",
+                        "ec2:DescribeRegions",
+                        "ec2:DescribeSecurityGroups",
+                        "ec2:DescribeSubnets",
+                        "ec2:DescribeVpcs",
+                        "ec2:GetInstanceTypesFromInstanceRequirements",
+                        "eks:DescribeNodegroup"
+                      ],
+                      "Resource": "*"
+                    }
+                  ]
+                }
+                EOF
+}
+
 resource "aws_iam_role_policy_attachment" "worker-node-ec2-tag-policy-attachment" {
   role       = aws_iam_role.worker-node-role.name
   policy_arn = aws_iam_policy.ec2_tag_policy.arn
@@ -101,9 +146,9 @@ resource "aws_iam_role_policy_attachment" "worker-node-ec2-tag-policy-attachment
 
 resource "aws_autoscaling_group" "worker-node-asg" {
   name                = "worker-node-asg"
-  desired_capacity    = 1
-  max_size            = 3
-  min_size            = 1
+  desired_capacity    = 3
+  max_size            = 5
+  min_size            = 3
   vpc_zone_identifier = [aws_subnet.wkn-a.id, aws_subnet.wkn-b.id, aws_subnet.wkn-c.id]
   target_group_arns = [
     aws_lb_target_group.worker-node-api-target-group.arn,
@@ -118,10 +163,27 @@ resource "aws_autoscaling_group" "worker-node-asg" {
   }
 
   tag {
-    key   = "NodeType"
-    value = "worker-node"
+    key                 = "Name"
+    value               = "worker-node-asg"
+    propagate_at_launch = false
+  }
 
+  tag {
+    key                 = "NodeType"
+    value               = "worker-node"
     propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/enabled"
+    value               = "true"
+    propagate_at_launch = false
+  }
+
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/kubernetes"
+    value               = "owned"
+    propagate_at_launch = false
   }
 
   depends_on = [aws_instance.control-plane, aws_s3_object.worker_node_script, aws_nat_gateway.kubernetes-nat-gateway, aws_launch_template.worker-node-launch-template]
@@ -214,6 +276,7 @@ resource "aws_instance" "control-plane" {
 
   lifecycle {
     ignore_changes = [
+      ami,
       tags["Name"],
     ]
   }

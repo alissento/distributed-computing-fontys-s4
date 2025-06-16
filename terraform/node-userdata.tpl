@@ -8,7 +8,7 @@ echo "Installing AWS CLI, Ansible, unzip, htp and other dependencies necessary f
 
 apt update
 apt upgrade -y
-apt install -y ansible unzip htop apt-transport-https ca-certificates curl gnupg lsb-release gpg git
+apt install -y ansible unzip htop apt-transport-https ca-certificates curl gnupg lsb-release gpg git postgresql-client
 
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
@@ -39,13 +39,9 @@ if [ "$NODE_TYPE" == "control-plane" ]; then
     chmod +x /tmp/masternode.sh
     /tmp/masternode.sh
     echo "Master node setup completed"
-
-    kubectl create secret docker-registry ecr-registry-secret \
-    --docker-server="${ECR_REGISTRY}" \
-    --docker-username=AWS \
-    --docker-password="${ECR_PASSWORD}" \
-    --docker-email=no-reply@example.com
-    echo "Docker registry secret created"
+    echo "Cloning the GitHub repository to /home/ubuntu/github-repo"
+    git clone https://github.com/alissento/distributed-computing-fontys-s4.git /home/ubuntu/github-repo
+    echo "Repository cloned successfully"
 
 elif [ "$NODE_TYPE" == "worker-node" ]; then
     echo "Worker node detected, downloading shell script to install worker node software"

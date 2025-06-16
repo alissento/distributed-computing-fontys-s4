@@ -53,10 +53,10 @@ export default function Register() {
             
             // Submit to API via store
             await register(formData.name, formData.email, formData.password)
-            toast("Account created", {
-                description: "You have successfully registered"
-            })
-            navigate("/")
+            setIsSubmitting(false)
+            
+            // Don't navigate or show success toast here - AuthStore will handle the flow
+            // User will be automatically redirected to TOTP setup screen
         } catch (error) {
             setIsSubmitting(false)
             if (error instanceof z.ZodError) {
