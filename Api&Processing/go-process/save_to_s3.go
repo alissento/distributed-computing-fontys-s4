@@ -61,3 +61,15 @@ func updateJobStatusToCompleted(s3Client *s3.Client, bucketName, key string) err
 	log.Printf("Job %s marked as completed", job.JobID)
 	return nil
 }
+func savePDFToS3(s3Client *s3.Client, bucketName, key string, body io.Reader) error {
+	_, err := s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: &bucketName,
+		Key:    &key,
+		Body:   body,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to upload data to S3: %w", err)
+	}
+	log.Printf("Successfully uploaded PDF to S3: %s/%s", bucketName, key)
+	return nil
+}

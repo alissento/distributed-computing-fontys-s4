@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -24,4 +25,26 @@ func downloadStockData(s3Key string) (string, error) {
 		return "", fmt.Errorf("failed to read object body: %w", err)
 	}
 	return string(body), nil
+}
+func DownloadS3ObjectAsJSON(bucketName, key string) (map[string]interface{}, error) {
+	obj, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get object: %w", err)
+	}
+	defer obj.Body.Close()
+
+	data, err := io.ReadAll(obj.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read object body: %w", err)
+	}
+
+	var jsonData map[string]interface{}
+	if err := json.Unmarshal(data, &jsonData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
+
+	return jsonData, nil
 }

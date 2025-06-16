@@ -45,6 +45,24 @@ func DownloadS3Object(bucketName, key string) (string, error) {
 	log.Printf("Downloaded object from S3: %s/%s", bucketName, key)
 	return string(data), nil
 }
+func DownloadS3Pdf(bucketName, key string) ([]byte, error) {
+	obj, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get object: %w", err)
+	}
+	defer obj.Body.Close()
+
+	data, err := io.ReadAll(obj.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read object body: %w", err)
+	}
+
+	log.Printf("Downloaded object from S3: %s/%s", bucketName, key)
+	return data, nil
+}
 
 func ListS3Keys(bucketName string) ([]string, error) {
 	resp, err := s3Client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
