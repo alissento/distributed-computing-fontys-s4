@@ -68,7 +68,7 @@ func Handle_Job_Request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("Job request:", string(messageBody))
-	err = SendMessageToSQS(string(messageBody), jobID)
+	err = SendMessageToSQS(string(messageBody))
 	if err != nil {
 		http.Error(w, "Failed to send to SQS: "+err.Error(), http.StatusInternalServerError)
 		log.Println("Error sending to SQS:", err)
