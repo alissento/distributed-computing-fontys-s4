@@ -23,7 +23,7 @@ public class StockService implements StockServiceUseCase {
     @Override
     public StockHistoryResponse getStockHistory(String symbol) {
         StockHistoryResponse response = restClient.get()
-                .uri("/stocks/{symbol}", symbol)
+                .uri(processApiUrl + "/stocks/{symbol}", symbol)
                 .retrieve()
                 .body(StockHistoryResponse.class);
         return response;
@@ -32,7 +32,7 @@ public class StockService implements StockServiceUseCase {
     @Override
     public StocksResponse getStocks() {
         List<String> response = restClient.get()
-                .uri("http://localhost:8080/stocks")
+                .uri(processApiUrl + "/stocks")
                 .retrieve()
                 .body(List.class);
         return new StocksResponse(response);

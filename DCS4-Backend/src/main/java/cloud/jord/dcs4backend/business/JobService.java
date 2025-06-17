@@ -25,7 +25,7 @@ public class JobService implements JobServiceUseCase {
     @Override
     public JobStatusResponse getJobStatus(String jobId) {
         JobStatusResponse response = restClient.get()
-                .uri("http://localhost:8080/jobs/{jobId}/status", jobId)
+                .uri(processApiUrl + "/jobs/{jobId}/status", jobId)
                 .retrieve()
                 .body(JobStatusResponse.class);
         return response;
@@ -34,7 +34,7 @@ public class JobService implements JobServiceUseCase {
     @Override
     public String[] getJobs() {
         String[] response = restClient.get()
-                .uri("http://localhost:8080/jobs")
+                .uri(processApiUrl + "/jobs")
                 .retrieve()
                 .body(String[].class);
         return response;
@@ -52,7 +52,7 @@ public class JobService implements JobServiceUseCase {
         requestMap.put("end_date", String.format("%tF", request.getEnd_date()));
 
         String response = restClient.post()
-                .uri("http://localhost:8080//jobs")
+                .uri(processApiUrl + "/jobs")
                 .body(requestMap)
                 .retrieve()
                 .body(String.class);
@@ -62,7 +62,7 @@ public class JobService implements JobServiceUseCase {
     @Override
     public Resource getJobPdf(String id) {
         Resource response = restClient.get()
-                .uri("http://localhost:8080/jobs/{id}/pdf", id)
+                .uri(processApiUrl + "/jobs/{id}/pdf", id)
                 .retrieve()
                 .body(Resource.class);
         return response;
