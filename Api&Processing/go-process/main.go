@@ -56,6 +56,7 @@ func main() {
 	// Load .env file only if running locally (no APP_ENV or APP_ENV=local)
 	if os.Getenv("APP_ENV") == "" || os.Getenv("APP_ENV") == "local" {
 		envFile := ".env.dev"
+		log.Printf("Loading environment variables from %s", envFile)
 		err := godotenv.Load(envFile)
 		if err != nil {
 			log.Printf("Warning: could not load %s: %v", envFile, err)
