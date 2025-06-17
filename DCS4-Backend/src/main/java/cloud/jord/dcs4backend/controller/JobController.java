@@ -4,6 +4,7 @@ import cloud.jord.dcs4backend.business.JobServiceUseCase;
 import cloud.jord.dcs4backend.domain.request.StockRequest;
 import cloud.jord.dcs4backend.domain.response.JobStatusResponse;
 import cloud.jord.dcs4backend.domain.response.StockResponse;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +42,7 @@ public class JobController {
 
     @PreAuthorize("hasRole('ROLE_ANALYST')")
     @PostMapping()
-    public ResponseEntity<String> createJob(@RequestBody StockRequest request) {
+    public ResponseEntity<String> createJob(@RequestBody @Valid StockRequest request) {
         String response = jobService.createJob(request);
         return ok(response);
     }

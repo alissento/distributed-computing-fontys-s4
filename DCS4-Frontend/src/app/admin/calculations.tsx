@@ -30,22 +30,27 @@ import {cn} from "@/lib/utils.ts";
 import jobsAPI from "@/api/JobsAPI.ts";
 
 const calculationFormSchema = z.object({
-    stock_symbol: z.string().min(1, {
-        message: "Stock symbol is required.",
-    }),
-    processing_type: z.string().min(1, {
-        message: "Processing type is required.",
-    }),
+    stock_symbol: z.string().min(1, "Stock symbol is required.").max(5, "Stock symbol must be between 1 and 5 characters long."),
+    processing_type: z.string().min(1, "Processing type is required.").max(35, "Processing type must be between 1 and 35 characters long."),
     jump_days: z.number({
-        required_error: "Please select a timeframe.",
-    }),
+        required_error: "Please select a valid timeframe.",
+        invalid_type_error: "Please select a valid timeframe."
+    }).int().min(1, "Jump days must be between 1 and 10.").max(10, "Jump days must be between 1 and 10."),
     start_date: z.date({
         required_error: "Start date is required.",
     }),
     end_date: z.date({
         required_error: "End date is required.",
-    })
-})
+    }),
+}).refine((data) => {
+    if (data.start_date > data.end_date) {
+        return "Start date must be before end date.";
+    }
+    if (data.end_date.getTime() - data.start_date.getTime() > 31536000000) {
+        return "End date must be within 1 year.";
+    }
+    return true;
+}, "Invalid date range.");
 
 type CalculationFormValues = z.infer<typeof calculationFormSchema>
 
@@ -144,7 +149,10 @@ export default function AdminCalculations() {
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Prediction Jump days</FormLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value.toString()}>
+                                                    <Select 
+                                                        onValueChange={(value) => field.onChange(parseInt(value))} 
+                                                        defaultValue={field.value.toString()}
+                                                    >
                                                         <FormControl>
                                                             <SelectTrigger>
                                                                 <SelectValue placeholder="Select a timeframe" />
