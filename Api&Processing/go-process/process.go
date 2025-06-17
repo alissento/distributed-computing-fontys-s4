@@ -28,8 +28,8 @@ func processJob(key string) {
 	}
 
 	switch job.ProcessingType {
-	case "Test":
-		predictions := movingAverage(stockData, job.JumpDays)
+	case "Predict_Regression":
+		predictions := QuadraticRegressionPredict(stockData, job)
 		handlePredictionResult(job, predictions, nil)
 
 	case "Predict_Average":

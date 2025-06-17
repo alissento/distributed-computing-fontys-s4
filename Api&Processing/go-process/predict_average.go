@@ -11,7 +11,7 @@ import (
 )
 
 func LinearRegressionPredict(historicalData []float64, futureDates []string) map[string]map[string]string {
-	// Calculate the linear regression slope (m) and intercept (b)
+
 	n := float64(len(historicalData))
 	if n == 0 {
 		log.Println("No historical data for regression.")

@@ -152,7 +152,8 @@ resource "aws_autoscaling_group" "worker-node-asg" {
   vpc_zone_identifier = [aws_subnet.wkn-a.id, aws_subnet.wkn-b.id, aws_subnet.wkn-c.id]
   target_group_arns = [
     aws_lb_target_group.worker-node-api-target-group.arn,
-    aws_lb_target_group.worker-node-https-target-group.arn
+    aws_lb_target_group.worker-node-https-target-group.arn,
+    aws_lb_target_group.worker-node-monitoring-target-group.arn
   ]
   health_check_type         = "EC2"
   health_check_grace_period = 300
@@ -209,14 +210,21 @@ module "worker-node-sg" {
       to_port     = 30080
       protocol    = "tcp"
       cidr_blocks = "0.0.0.0/0"
-      description = "Allow HTTP traffic from Load Balancer to Traefik"
+      description = "Allow API traffic"
     },
     {
       from_port   = 30443
       to_port     = 30443
       protocol    = "tcp"
       cidr_blocks = "0.0.0.0/0"
-      description = "Allow HTTPS traffic from Load Balancer to Traefik"
+      description = "Allow website traffic"
+    },
+    {
+      from_port   = 30555
+      to_port     = 30555
+      protocol    = "tcp"
+      cidr_blocks = "0.0.0.0/0"
+      description = "Allow monitoring traffic"
     }
   ]
 

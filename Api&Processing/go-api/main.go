@@ -114,6 +114,7 @@ func main() {
 	sqsClient = sqs.NewFromConfig(cfg)
 
 	r := mux.NewRouter()
+	r.Use(loggingMux)
 
 	r.HandleFunc("/stocks", Handle_Stock_Symbols).Methods("GET")                      //Return all stock symbols
 	r.HandleFunc("/stocks/{stock_name}/history", Handle_Stock_History).Methods("GET") //fetch stock history data
@@ -125,4 +126,10 @@ func main() {
 	r.HandleFunc("/jobs/{job_id}/pdf", getJobPdf).Methods("GET")       //return job pdf.
 	log.Println("API server running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
+}
+func loggingMux(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("%s %s %s", r.RemoteAddr, r.Method, r.URL)
+		next.ServeHTTP(w, r)
+	})
 }

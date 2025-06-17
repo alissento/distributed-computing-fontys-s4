@@ -121,7 +121,7 @@ resource "aws_lb_target_group" "worker-node-api-target-group" {
 resource "aws_lb_target_group" "worker-node-monitoring-target-group" {
   name     = "worker-node-monitoring-tg"
   port     = 30555
-  protocol = "HTTPS"
+  protocol = "HTTP"
   vpc_id   = aws_vpc.kubernetes-vpc.id
 
   health_check {
@@ -131,7 +131,7 @@ resource "aws_lb_target_group" "worker-node-monitoring-target-group" {
     matcher             = "200"
     path                = "/"
     port                = "traffic-port"
-    protocol            = "HTTPS"
+    protocol            = "HTTP"
     timeout             = 5
     unhealthy_threshold = 2
   }
