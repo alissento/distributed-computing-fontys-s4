@@ -12,7 +12,7 @@ func getJobStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jobDataStr, err := DownloadS3Object("jobs", jobID+".json")
+	jobDataStr, err := DownloadS3Object(jobBucket, jobID+".json")
 	if err != nil {
 		http.Error(w, "Failed to download job data: "+err.Error(), http.StatusInternalServerError)
 		return

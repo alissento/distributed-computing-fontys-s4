@@ -81,7 +81,7 @@ func ListS3Keys(bucketName string) ([]string, error) {
 	return keys, nil
 }
 func GetJobResultInMap(jobID string) (map[string]string, error) {
-	data, err := DownloadS3Object("jobs", jobID)
+	data, err := DownloadS3Object(jobBucket, jobID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download job result: %w", err)
 	}
@@ -103,7 +103,7 @@ func SaveJobRequestToS3(JobID string, job JobRequest) error {
 	}
 	key := fmt.Sprintf("%s.json", job.JobID)
 	_, err = s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket:      aws.String("jobs"),
+		Bucket:      aws.String(jobBucket),
 		Key:         aws.String(key),
 		Body:        bytes.NewReader(jsonBytes),
 		ContentType: aws.String("application/json"),
@@ -112,6 +112,6 @@ func SaveJobRequestToS3(JobID string, job JobRequest) error {
 		return fmt.Errorf("failed to upload JSON to S3: %w", err)
 	}
 
-	log.Printf("Successfully uploaded job JSON to S3: %s/%s", "jobs", key)
+	log.Printf("Successfully uploaded job JSON to S3: %s/%s", jobBucket, key)
 	return nil
 }

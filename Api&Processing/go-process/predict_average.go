@@ -12,6 +12,8 @@ import (
 
 func LinearRegressionPredict(historicalData []float64, futureDates []string) map[string]map[string]string {
 
+	//log the historical data
+	log.Printf("Historical data for regression: %v", historicalData)
 	n := float64(len(historicalData))
 	if n == 0 {
 		log.Println("No historical data for regression.")
@@ -53,6 +55,8 @@ func LinearRegressionPredict(historicalData []float64, futureDates []string) map
 
 func PredictAverage(stockData StockData, job JobRequest) (map[string]map[string]string, error) {
 
+	//log stockdata
+	log.Printf("Stock data for prediction: %+v", stockData)
 	startDate, err := time.Parse("2006-01-02", job.StartDate) //TODO maak een functie
 	if err != nil {
 		log.Println("Invalid start date:", err)
@@ -88,7 +92,7 @@ func PredictAverage(stockData StockData, job JobRequest) (map[string]map[string]
 		futureDates = append(futureDates, currentDate.Format("2006-01-02"))
 		currentDate = currentDate.AddDate(0, 0, job.JumpDays)
 	}
-
+	log.Println(historicalClosePrices, " historical close prices for prediction")
 	// Predict future stock prices
 	predictedData := LinearRegressionPredict(historicalClosePrices, futureDates)
 
