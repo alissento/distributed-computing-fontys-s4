@@ -1,6 +1,7 @@
 package cloud.jord.dcs4backend.domain.request;
 
 import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
 
@@ -12,7 +13,8 @@ public class StockRequest {
     private String stock_symbol;
     @Length(min = 1, max = 35, message = "Processing type must be between 1 and 35 characters long.")
     private String processing_type;
-    @Length(min = 1, max = 10, message = "Jump days must be between 1 and 10.")
+    @Min(1)
+    @Max(10)
     private Integer jump_days;
     private Date start_date;
     private Date end_date;
