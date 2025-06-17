@@ -33,6 +33,18 @@ resource "aws_route53_record" "api-subdomain" {
   }
 }
 
+resource "aws_route53_record" "monitoring-subdomain" {
+  zone_id = aws_route53_zone.hosted-zone.zone_id
+  name    = "monitoring.norbertknez.me"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.kubernetes-alb.dns_name
+    zone_id                = aws_lb.kubernetes-alb.zone_id
+    evaluate_target_health = true
+  }
+}
+
 resource "aws_acm_certificate" "tls-cert-http" {
   domain_name               = "norbertknez.me"
   subject_alternative_names = ["api.norbertknez.me", "monitoring.norbertknez.me"]
