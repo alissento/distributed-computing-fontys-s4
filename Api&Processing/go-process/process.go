@@ -53,7 +53,7 @@ func handlePredictionResult[T map[string]map[string]string](job JobRequest, pred
 		return
 	}
 
-	updateJobStatusToCompleted(s3Client, "jobs", job.JobID)
+	updateJobStatusToCompleted(s3Client, jobBucket, job.JobID)
 }
 
 // func makePredictionSeries(start time.Time, value float64, jumpDays, count int) map[string]map[string]string {
