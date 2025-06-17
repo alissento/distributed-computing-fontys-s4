@@ -135,6 +135,7 @@ export default function AdminCalculations() {
                                                             </FormControl>
                                                             <SelectContent>
                                                                 <SelectItem value="Predict_Average">Predict Average</SelectItem>
+                                                                <SelectItem value="Predict_Regression">Predict Regression</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </FormControl>
