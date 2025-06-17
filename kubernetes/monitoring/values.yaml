@@ -69,8 +69,10 @@ kubelet:
 kubeControllerManager:
   enabled: true
   endpoints:
-    - 10.0.4.20
-    - 10.0.8.53
+    - 10.0.4.58
+    - 10.0.7.247
+    - 10.0.8.27
+    - 10.0.9.167
 
 coreDns:
   enabled: true
@@ -81,8 +83,10 @@ kubeDns:
 kubeEtcd:
   enabled: true
   endpoints:
-    - 10.0.4.20
-    - 10.0.8.53
+    - 10.0.4.58
+    - 10.0.7.247
+    - 10.0.8.27
+    - 10.0.9.167
   service:
     enabled: true
     port: 2381
@@ -91,14 +95,18 @@ kubeEtcd:
 kubeScheduler:
   enabled: true
   endpoints:
-    - 10.0.4.20
-    - 10.0.8.53
+    - 10.0.4.58
+    - 10.0.7.247
+    - 10.0.8.27
+    - 10.0.9.167
 
 kubeProxy:
   enabled: true
   endpoints:
-    - 10.0.4.20
-    - 10.0.8.53
+    - 10.0.4.58
+    - 10.0.7.247
+    - 10.0.8.27
+    - 10.0.9.167
 
 kubeStateMetrics:
   enabled: true
