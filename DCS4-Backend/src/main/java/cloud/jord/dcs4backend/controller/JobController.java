@@ -5,6 +5,7 @@ import cloud.jord.dcs4backend.domain.request.StockRequest;
 import cloud.jord.dcs4backend.domain.response.JobStatusResponse;
 import cloud.jord.dcs4backend.domain.response.StockResponse;
 import lombok.AllArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,13 @@ public class JobController {
     @GetMapping("{id}/status")
     public ResponseEntity<JobStatusResponse> getJobStatus(@PathVariable String id) {
         JobStatusResponse response = jobService.getJobStatus(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("{id}/pdf")
+    public ResponseEntity<Resource> getJobPdf(@PathVariable String id) {
+        Resource response = jobService.getJobPdf(id);
         return ResponseEntity.ok(response);
     }
 

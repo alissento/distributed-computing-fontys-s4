@@ -5,6 +5,7 @@ import cloud.jord.dcs4backend.domain.response.JobStatusResponse;
 import cloud.jord.dcs4backend.domain.response.StockHistoryResponse;
 import cloud.jord.dcs4backend.domain.response.StockResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -55,6 +56,15 @@ public class JobService implements JobServiceUseCase {
                 .body(requestMap)
                 .retrieve()
                 .body(String.class);
+        return response;
+    }
+
+    @Override
+    public Resource getJobPdf(String id) {
+        Resource response = restClient.get()
+                .uri("http://localhost:8080/jobs/{id}/pdf", id)
+                .retrieve()
+                .body(Resource.class);
         return response;
     }
 }
