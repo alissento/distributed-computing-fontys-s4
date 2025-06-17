@@ -25,7 +25,7 @@ resource "aws_route53_record" "api-subdomain" {
   zone_id = aws_route53_zone.hosted-zone.zone_id
   name    = "api.norbertknez.me"
   type    = "A"
-  
+
   alias {
     name                   = aws_lb.kubernetes-alb.dns_name
     zone_id                = aws_lb.kubernetes-alb.zone_id
@@ -34,9 +34,9 @@ resource "aws_route53_record" "api-subdomain" {
 }
 
 resource "aws_acm_certificate" "tls-cert-http" {
-  domain_name       = "norbertknez.me"
+  domain_name               = "norbertknez.me"
   subject_alternative_names = ["api.norbertknez.me", "monitoring.norbertknez.me"]
-  validation_method = "DNS"
+  validation_method         = "DNS"
 
   tags = {
     Name = "norbertknez.me certificate"

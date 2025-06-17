@@ -9,7 +9,7 @@ spec:
   replicas: 3
   selector:
     matchLabels:
-      app: go-api 
+      app: go-api
   template:
     metadata:
       labels:

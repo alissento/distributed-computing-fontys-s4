@@ -5,33 +5,25 @@ REGION="eu-west-1"
 ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
 ECR_PASSWORD=$(aws ecr get-login-password --region "${REGION}")
 
-try() {
-    kubectl create secret docker-registry ecr-registry-secret -n webapp \
-    --docker-server="${ECR_REGISTRY}" \
-    --docker-username=AWS \
-    --docker-password="${ECR_PASSWORD}" \
-    --docker-email=no-reply@example.com
+echo "Deleting existing secrets of ECR registry..."
+kubectl delete secret ecr-registry-secret -n webapp
+kubectl delete secret ecr-registry-secret -n process-stack 
 
-    kubectl create secret docker-registry ecr-registry-secret -n process-stack \
-    --docker-server="${ECR_REGISTRY}" \
-    --docker-username=AWS \
-    --docker-password="${ECR_PASSWORD}" \
-    --docker-email=no-reply@example.com
-} || {
-    kubectl delete secret ecr-registry-secret -n webapp
-    kubectl delete secret ecr-registry-secret -n process-stack
-    kubectl create secret docker-registry ecr-registry-secret -n webapp \
-    --docker-server="${ECR_REGISTRY}" \
-    --docker-username=AWS \
-    --docker-password="${ECR_PASSWORD}" \
-    --docker-email=no-reply@example.com
-    kubectl create secret docker-registry ecr-registry-secret -n process-stack \
-    --docker-server="${ECR_REGISTRY}" \
-    --docker-username=AWS \
-    --docker-password="${ECR_PASSWORD}" \
-    --docker-email=no-reply@example.com
-}
+echo "Creating ECR registry secret for webapp namespace..."
+kubectl create secret docker-registry ecr-registry-secret -n webapp \
+--docker-server="${ECR_REGISTRY}" \
+--docker-username=AWS \
+--docker-password="${ECR_PASSWORD}" \
+--docker-email=no-reply@example.com
 
+echo "Creating ECR registry secret for process-stack namespace..."
+kubectl create secret docker-registry ecr-registry-secret -n process-stack \
+--docker-server="${ECR_REGISTRY}" \
+--docker-username=AWS \
+--docker-password="${ECR_PASSWORD}" \
+--docker-email=no-reply@example.com
+
+echo "Creating other secrets..."
 kubectl create secret generic jwt-secret -n webapp \
 --from-literal=JWT_SECRET=1P3BtzxdaWrueOgdLcXIJLUUhP6RA3BlPF128PYrZzF2JBQ2pzB2WWMuGQc0BSg6
 
