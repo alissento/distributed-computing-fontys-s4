@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 func downloadStockData(s3Key string) (string, error) {
+	log.Printf("Downloading stock data from S3 with key: %s", s3Key)
+	log.Printf("Using bucket name: %s", StockDataBucketName)
 	obj, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
 		Bucket: &StockDataBucketName,
 		Key:    aws.String(s3Key),
@@ -24,6 +27,8 @@ func downloadStockData(s3Key string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to read object body: %w", err)
 	}
+	//Log the size of the downloaded data
+	log.Printf("Downloaded %d bytes from S3", len(body))
 	return string(body), nil
 }
 func DownloadS3ObjectAsJSON(bucketName, key string) (map[string]interface{}, error) {
