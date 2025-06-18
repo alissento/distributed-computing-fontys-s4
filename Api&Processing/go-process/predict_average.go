@@ -2,17 +2,14 @@ package main
 
 import (
 	"fmt"
-
 	"log"
 	"math/rand"
-
 	"strconv"
 	"time"
 )
 
 func LinearRegressionPredict(historicalData []float64, futureDates []string) map[string]map[string]string {
-
-	//log the historical data
+	// log the historical data
 	log.Printf("Historical data for regression: %v", historicalData)
 	n := float64(len(historicalData))
 	if n == 0 {
@@ -54,10 +51,10 @@ func LinearRegressionPredict(historicalData []float64, futureDates []string) map
 }
 
 func PredictAverage(stockData StockData, job JobRequest) (map[string]map[string]string, error) {
-
-	//log stockdata
+	// log stockdata
 	log.Printf("Stock data for prediction: %+v", stockData)
-	startDate, err := time.Parse("2006-01-02", job.StartDate) //TODO maak een functie
+
+	startDate, err := time.Parse("2006-01-02", job.StartDate)
 	if err != nil {
 		log.Println("Invalid start date:", err)
 		return nil, err
@@ -69,30 +66,29 @@ func PredictAverage(stockData StockData, job JobRequest) (map[string]map[string]
 		return nil, err
 	}
 
+	// Collect all historical close prices (no date filtering)
 	var historicalClosePrices []float64
-	for dateStr, dayData := range stockData.TimeSeriesDaily {
-		date, err := time.Parse("2006-01-02", dateStr)
-		if err != nil || date.After(endDate) || date.Before(startDate) {
+	for _, dayData := range stockData.TimeSeriesDaily {
+		closeStr, ok := dayData["4. close"]
+		if !ok {
 			continue
 		}
-
-		closeStr := dayData["4. close"]
 		closeVal, err := strconv.ParseFloat(closeStr, 64)
 		if err != nil {
 			continue
 		}
-
 		historicalClosePrices = append(historicalClosePrices, closeVal)
 	}
 
 	// Generate the list of future dates based on JumpDays
 	var futureDates []string
 	currentDate := startDate
-	for currentDate.Before(endDate) {
+	for !currentDate.After(endDate) {
 		futureDates = append(futureDates, currentDate.Format("2006-01-02"))
 		currentDate = currentDate.AddDate(0, 0, job.JumpDays)
 	}
-	log.Println(historicalClosePrices, " historical close prices for prediction")
+
+	log.Println(historicalClosePrices, "historical close prices for prediction")
 	// Predict future stock prices
 	predictedData := LinearRegressionPredict(historicalClosePrices, futureDates)
 

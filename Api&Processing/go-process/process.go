@@ -12,18 +12,22 @@ func processJob(key string) {
 	err := json.Unmarshal([]byte(key), &job)
 	if err != nil {
 		log.Println("Error undoing json job request:", err)
+		updateJobStatus(s3Client, jobBucket, job.JobID, "error")
 		return
 	}
 
 	data, err := downloadStockData(job.S3Key)
 	if err != nil {
 		log.Println("Error downloading stock data:", err)
+		updateJobStatus(s3Client, jobBucket, job.JobID, "error")
 		return
 	}
+
 	var stockData StockData
 	err = json.Unmarshal([]byte(data), &stockData)
 	if err != nil {
 		log.Println("Failed to unmarshal stock data:", err)
+		updateJobStatus(s3Client, jobBucket, job.JobID, "error")
 		return
 	}
 
@@ -38,22 +42,25 @@ func processJob(key string) {
 
 	default:
 		log.Println("Unknown processing type:", job.ProcessingType)
+		updateJobStatus(s3Client, jobBucket, job.JobID, "error")
 		return
 	}
-
 }
 func handlePredictionResult[T map[string]map[string]string](job JobRequest, predictions T, err error) {
 	if err != nil {
 		log.Println("Error during prediction:", err)
-		return
-	}
-	err = savePredictionsToS3(job.JobID, predictions, "results/")
-	if err != nil {
-		log.Println("Error saving predictions:", err)
+		updateJobStatus(s3Client, jobBucket, job.JobID, "error")
 		return
 	}
 
-	updateJobStatusToCompleted(s3Client, jobBucket, job.JobID)
+	err = savePredictionsToS3(job.JobID, predictions, "results/")
+	if err != nil {
+		log.Println("Error saving predictions:", err)
+		updateJobStatus(s3Client, jobBucket, job.JobID, "error")
+		return
+	}
+
+	updateJobStatus(s3Client, jobBucket, job.JobID, "completed")
 }
 
 // func makePredictionSeries(start time.Time, value float64, jumpDays, count int) map[string]map[string]string {

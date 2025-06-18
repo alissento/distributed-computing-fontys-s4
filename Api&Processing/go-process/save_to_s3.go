@@ -25,7 +25,7 @@ func saveToS3(s3Client *s3.Client, bucketName, key, data string) error {
 	return nil
 }
 
-func updateJobStatusToCompleted(s3Client *s3.Client, bucketName, key string) error {
+func updateJobStatus(s3Client *s3.Client, bucketName, key string, updatestatus string) error {
 	log.Printf("This is the bucket name: %s", bucketName)
 	log.Printf("This is the key: %s", key+".json")
 	key += ".json"
@@ -47,7 +47,7 @@ func updateJobStatusToCompleted(s3Client *s3.Client, bucketName, key string) err
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	job.JobStatus = "completed"
+	job.JobStatus = updatestatus
 
 	updatedJSON, err := json.Marshal(job)
 	if err != nil {
