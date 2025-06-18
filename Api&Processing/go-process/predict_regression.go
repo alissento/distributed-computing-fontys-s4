@@ -10,6 +10,7 @@ import (
 )
 
 func QuadraticRegressionPredict(stockData StockData, job JobRequest) map[string]map[string]string {
+	// Parse start and end dates as before (validate them)
 	startDate, err := time.Parse("2006-01-02", job.StartDate)
 	if err != nil {
 		log.Println("Invalid start date:", err)
@@ -22,12 +23,9 @@ func QuadraticRegressionPredict(stockData StockData, job JobRequest) map[string]
 		return nil
 	}
 
+	// Collect all historical close prices (ignore startDate and endDate here)
 	var historicalClosePrices []float64
-	for dateStr, dayData := range stockData.TimeSeriesDaily {
-		date, err := time.Parse("2006-01-02", dateStr)
-		if err != nil || date.Before(startDate) || date.After(endDate) {
-			continue
-		}
+	for _, dayData := range stockData.TimeSeriesDaily {
 		closeStr := dayData["4. close"]
 		closeVal, err := strconv.ParseFloat(closeStr, 64)
 		if err != nil {
@@ -41,15 +39,15 @@ func QuadraticRegressionPredict(stockData StockData, job JobRequest) map[string]
 		return nil
 	}
 
-	// Build future dates
+	// Build future dates including endDate (use !currentDate.After(endDate))
 	var futureDates []string
 	currentDate := startDate
-	for currentDate.Before(endDate) {
+	for !currentDate.After(endDate) {
 		futureDates = append(futureDates, currentDate.Format("2006-01-02"))
 		currentDate = currentDate.AddDate(0, 0, job.JumpDays)
 	}
 
-	// Regression logic
+	// Regression logic unchanged ...
 	n := len(historicalClosePrices)
 	var sumX, sumY, sumX2, sumX3, sumX4, sumXY, sumX2Y float64
 	for i := 0; i < n; i++ {
