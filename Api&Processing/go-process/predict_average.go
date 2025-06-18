@@ -51,9 +51,6 @@ func LinearRegressionPredict(historicalData []float64, futureDates []string) map
 }
 
 func PredictAverage(stockData StockData, job JobRequest) (map[string]map[string]string, error) {
-	// log stockdata
-	log.Printf("Stock data for prediction: %+v", stockData)
-
 	startDate, err := time.Parse("2006-01-02", job.StartDate)
 	if err != nil {
 		log.Println("Invalid start date:", err)
