@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 var requestDataPredict struct {
@@ -22,6 +23,7 @@ func Handle_Job_Request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	requestDataPredict.StockSymbol = strings.ToUpper(requestDataPredict.StockSymbol)
 	stockdata, err := FetchStockData(requestDataPredict.StockSymbol)
 	if err != nil {
 		http.Error(w, "Failed to fetch stock data: "+err.Error(), http.StatusInternalServerError)
