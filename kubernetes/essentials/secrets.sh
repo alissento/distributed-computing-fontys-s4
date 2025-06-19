@@ -39,6 +39,3 @@ kubectl create secret generic go-api-secret -n webapp \
 
 kubectl create secret generic alphavantage-secret -n process-stack \
 --from-literal=ALPHAVANTAGE_KEY=HKAJUSEOTSJ2ID11
-
-kubectl create secret generic grafana-secret -n monitoring  \
---from-literal=ADMIN_PASSWORD=devDEV123$
