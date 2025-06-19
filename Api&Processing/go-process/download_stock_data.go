@@ -27,8 +27,7 @@ func downloadStockData(s3Key string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to read object body: %w", err)
 	}
-	//Log the size of the downloaded data
-	log.Printf("Downloaded %d bytes from S3", len(body))
+
 	return string(body), nil
 }
 func DownloadS3ObjectAsJSON(bucketName, key string) (map[string]interface{}, error) {

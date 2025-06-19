@@ -9,8 +9,6 @@ import (
 )
 
 func LinearRegressionPredict(historicalData []float64, futureDates []string) map[string]map[string]string {
-	// log the historical data
-	log.Printf("Historical data for regression: %v", historicalData)
 	n := float64(len(historicalData))
 	if n == 0 {
 		log.Println("No historical data for regression.")
@@ -62,8 +60,6 @@ func PredictAverage(stockData StockData, job JobRequest) (map[string]map[string]
 		log.Println("Invalid end date:", err)
 		return nil, err
 	}
-
-	// Collect all historical close prices (no date filtering)
 	var historicalClosePrices []float64
 	for _, dayData := range stockData.TimeSeriesDaily {
 		closeStr, ok := dayData["4. close"]
@@ -85,8 +81,6 @@ func PredictAverage(stockData StockData, job JobRequest) (map[string]map[string]
 		currentDate = currentDate.AddDate(0, 0, job.JumpDays)
 	}
 
-	log.Println(historicalClosePrices, "historical close prices for prediction")
-	// Predict future stock prices
 	predictedData := LinearRegressionPredict(historicalClosePrices, futureDates)
 
 	// Return the predicted stock data in the required format

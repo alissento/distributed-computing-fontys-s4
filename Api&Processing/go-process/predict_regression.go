@@ -22,8 +22,6 @@ func QuadraticRegressionPredict(stockData StockData, job JobRequest) map[string]
 		log.Println("Invalid end date:", err)
 		return nil
 	}
-
-	// Collect all historical close prices (ignore startDate and endDate here)
 	var historicalClosePrices []float64
 	for _, dayData := range stockData.TimeSeriesDaily {
 		closeStr := dayData["4. close"]

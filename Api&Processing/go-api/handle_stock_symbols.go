@@ -3,13 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
 func Handle_Stock_Symbols(w http.ResponseWriter, r *http.Request) {
 	symbols, err := ListS3Keys(stockBucket)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to fetch stock symbols: %v", err), http.StatusInternalServerError)
+		log.Println("Failed to fetch stock symbols from S3:", err)
+		http.Error(w, fmt.Sprintf("Failed to fetch stock symbols: %v"), http.StatusInternalServerError)
 		return
 	}
 

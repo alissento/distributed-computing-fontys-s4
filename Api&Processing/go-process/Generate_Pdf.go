@@ -22,7 +22,7 @@ type JobMeta struct {
 }
 
 func GenerateJobPdf(result map[string]map[string]string, jobId string) error {
-	// Step 1: Load job metadata
+
 	jsonJobMetaData, err := DownloadS3ObjectAsJSON(jobBucket, jobId+".json")
 	if err != nil {
 		return fmt.Errorf("job metadata was not loaded: %w", err)
@@ -36,7 +36,6 @@ func GenerateJobPdf(result map[string]map[string]string, jobId string) error {
 		return fmt.Errorf("failed to unmarshal into JobMeta: %w", err)
 	}
 
-	// Step 2: Parse and sort dates
 	var dates []time.Time
 	for dateStr := range result {
 		t, err := time.Parse("2006-01-02", dateStr)
@@ -60,8 +59,10 @@ func GenerateJobPdf(result map[string]map[string]string, jobId string) error {
 		xValues = append(xValues, date)
 		yValues = append(yValues, y)
 	}
-
-	// Step 3: Render chart into memory
+	const maxDataPoints = 5000
+	if len(xValues) > maxDataPoints {
+		return fmt.Errorf("chart data exceeds %d data points", maxDataPoints)
+	}
 	var imgBuf bytes.Buffer
 	graph := chart.Chart{
 		Title: "Stock Prediction (Close Price)",
@@ -80,8 +81,10 @@ func GenerateJobPdf(result map[string]map[string]string, jobId string) error {
 	if err := graph.Render(chart.PNG, &imgBuf); err != nil {
 		return fmt.Errorf("failed to render chart to buffer: %w", err)
 	}
+	if imgBuf.Len() > 25*1024*1024 {
+		return fmt.Errorf("chart image exceeds 25 MB size limit")
+	}
 
-	// Step 4: Generate PDF in-memory
 	pdf := fpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
 	pdf.SetFont("Arial", "", 12)
@@ -97,22 +100,21 @@ func GenerateJobPdf(result map[string]map[string]string, jobId string) error {
 	pdf.Cell(0, 10, fmt.Sprintf("Date Range: %s → %s", jobMeta.StartDate, jobMeta.EndDate))
 	pdf.Ln(10)
 
-	// Step 5: Register and embed PNG from buffer
 	imageOptions := fpdf.ImageOptions{
 		ImageType: "PNG",
 		ReadDpi:   true,
 	}
-	imgName := "chart.png" // virtual name
+	imgName := "chart.png"
 	pdf.RegisterImageOptionsReader(imgName, imageOptions, &imgBuf)
 	pdf.ImageOptions(imgName, 15, pdf.GetY(), 180, 0, false, imageOptions, 0, "")
 
-	// Step 6: Write PDF to buffer
 	var pdfBuf bytes.Buffer
 	if err := pdf.Output(&pdfBuf); err != nil {
 		return fmt.Errorf("failed to generate PDF: %w", err)
 	}
-
-	// Step 7: Upload to S3
+	if pdfBuf.Len() > 25*1024*1024 {
+		return fmt.Errorf("generated PDF exceeds size limit")
+	}
 	err = savePDFToS3(s3Client, predictionBucket, jobId+".pdf", bytes.NewReader(pdfBuf.Bytes()))
 	if err != nil {
 		return fmt.Errorf("failed to upload PDF to S3: %w", err)
