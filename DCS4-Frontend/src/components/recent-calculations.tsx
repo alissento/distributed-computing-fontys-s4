@@ -21,6 +21,7 @@ export function RecentCalculations() {
     const [jobs, setJobs] = useState<string[]>([]);
     const [jobStatuses, setJobStatuses] = useState<Record<string, JobStatus>>({});
     const [loadingStatuses, setLoadingStatuses] = useState<Record<string, boolean>>({});
+    const [downloadingJobs, setDownloadingJobs] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         if (!isAuthenticated || isLoading) {
@@ -59,6 +60,32 @@ export function RecentCalculations() {
                 console.error("Error fetching jobs:", error);
             });
     }, [isAuthenticated, isLoading]);
+
+    const handleDownload = async (jobId: string) => {
+        try {
+            setDownloadingJobs(prev => ({ ...prev, [jobId]: true }));
+            const pdfBlob = await JobsAPI.getJobPdf(jobId);
+            
+            // Verify it's actually a PDF
+            if (!pdfBlob.type.includes('pdf')) {
+                throw new Error('Invalid file type received');
+            }
+
+            const url = window.URL.createObjectURL(pdfBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `job-${jobId}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error(`Error downloading PDF for job ${jobId}:`, error);
+            // You might want to add a toast notification here
+        } finally {
+            setDownloadingJobs(prev => ({ ...prev, [jobId]: false }));
+        }
+    };
 
     if (!isAuthenticated || isLoading) {
         return null;
@@ -113,11 +140,19 @@ export function RecentCalculations() {
                         <TableCell className="flex items-center justify-center">
                             {loadingStatuses[jobId] ? (
                                 <Spinner />
-                            ) : (
-                                <a href={jobStatuses[jobId]?.job_id} target="_blank" rel="noopener noreferrer">
-                                    <DownloadIcon className="m-auto" />
-                                </a>
-                            )}
+                            ) : jobStatuses[jobId]?.job_status === "completed" ? (
+                                <button
+                                    onClick={() => handleDownload(jobId)}
+                                    disabled={downloadingJobs[jobId]}
+                                    className="hover:opacity-70 transition-opacity"
+                                >
+                                    {downloadingJobs[jobId] ? (
+                                        <Spinner />
+                                    ) : (
+                                        <DownloadIcon className="m-auto" />
+                                    )}
+                                </button>
+                            ) : null}
                         </TableCell>
                     </TableRow>
                 )) : null}

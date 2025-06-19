@@ -36,6 +36,16 @@ const JobsAPI = {
     getJobStatus: async (jobId: string): Promise<JobStatus> => {
         const response = await apiClient.get(`jobs/${jobId}/status`);
         return response.data;
+    },
+
+    getJobPdf: async (jobId: string): Promise<Blob> => {
+        const response = await apiClient.get(`jobs/${jobId}/pdf`, {
+            responseType: 'blob',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+        });
+        return response.data;
     }
 }
 
